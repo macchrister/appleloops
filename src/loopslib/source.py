@@ -10,6 +10,7 @@ from . import curl
 from . import plist
 from . import APPLICATIONS
 from . import APPLICATION_FOLDER
+from . import ARGS
 from . import HTTP_OK
 from . import TEMPDIR
 
@@ -75,7 +76,7 @@ class PropertyList:
 
             if curl.status(plist) in HTTP_OK:
                 # NOTE: Always get this property list silently even in a dry run.
-                f = curl.get(plist, str(dest), quiet=True, dry_run=False)
+                f = curl.get(u=plist, dest=str(dest), quiet=True, http2=ARGS.http2, insecure=ARGS.insecure, dry_run=False)
 
                 if f and dest.exists():
                     LOG.debug('Fetched {plist}'.format(plist=self.plist))
