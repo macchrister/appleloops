@@ -1,0 +1,194 @@
+standard:
+  - args:
+    - --APFS
+    kwargs:
+      action: store_true
+      dest: apfs_dmg
+      help: dmg is created with APFS
+      required: false
+  - args:
+    - -n
+    - --dry-run
+    kwargs:
+      action: store_true
+      dest: dry_run
+      help: performs a dry run
+      required: false
+  - args:
+    - -f
+    - --force
+    kwargs:
+      action: store_true
+      dest: force
+      help: force action (only for downloads/deployments)
+      required: false
+  - args:
+    - --http2
+    kwargs:
+      action: store_true
+      dest: http2
+      help: forces cURL to use http2
+      required: false
+  - args:
+    - -i
+    - --allow-insecure
+    kwargs:
+      action: store_true
+      dest: insecure
+      help: ignore invalid certificates when downloading
+      required: false
+  - args:
+    - --target
+    kwargs:
+      dest: install_target
+      help: installs packages to the specified target
+      metavar: <target>
+      required: false
+      default: /
+      type: &id001 !!python/name:builtins.str ''
+  - args:
+    - -l
+    - --log-level
+    kwargs:
+      choices:
+      - DEBUG
+      - INFO
+      default: INFO
+      dest: log_level
+      help: specify logging level INFO (default) or DEBUG
+      metavar: <level>
+      required: false
+      type: *id001
+  - args:
+    - -m
+    - --mandatory
+    kwargs:
+      action: store_true
+      dest: mandatory
+      help: processes the mandatory packages
+      required: false
+  - args:
+    - -o
+    - --optional
+    kwargs:
+      action: store_true
+      dest: optional
+      help: processes the optional packages
+      required: false
+  - args:
+    - -s
+    - --silent
+    kwargs:
+      action: store_true
+      dest: silent
+      help: no output to stdout
+      required: false
+  - args:
+    - --sleep
+    kwargs:
+      dest: sleep
+      help: specify the number of seconds to pause between installation and download
+      metavar: <sleep>
+      required: false
+      type: *id001
+  - args:
+    - -u
+    - --allow-untrusted
+    kwargs:
+      action: store_true
+      dest: unsigned
+      help: installs packages with invalid certificates
+      required: false
+  - args:
+    - -v
+    - --version
+    kwargs:
+      action: version
+mutually_exclusive:
+  deployment:
+    - args:
+      - --deployment
+      kwargs:
+        action: store_true
+        dest: deployment
+        help: install packages (must be run as root)
+        required: false
+    - args:
+      - -d
+      - --destination
+      kwargs:
+        dest: destination
+        help: download packages to the specified destination
+        metavar: <destination>
+        required: false
+        default: '/tmp/appleloops'
+        type: *id001
+    - args:
+      - -b
+      - --build-dmg
+      kwargs:
+        dest: build_dmg
+        help: builds a DMG containing downloaded packages
+        metavar: <filename>
+        required: false
+        type: *id001
+  plists:
+  - args:
+    - -a
+    - --apps
+    kwargs:
+      dest: apps
+      help: specify the application to process loops for
+      metavar: <app>
+      nargs: +
+      required: false
+      choices:
+        - garageband
+        - logicpro
+        - mainstage
+        - allapps
+      type: *id001
+  - args:
+    - --compare
+    kwargs:
+      dest: compare
+      help: compare package differences between two property lists
+      metavar: <plist>
+      nargs: 2
+      required: false
+      type: *id001
+  - args:
+    - -p
+    - --plists
+    kwargs:
+      dest: plists
+      help: specify a property list to process packages for
+      metavar: <plist>
+      nargs: +
+      required: false
+      type: *id001
+  - args:
+    - --supported-plists
+    kwargs:
+      action: store_true
+      dest: show_plists
+      help: lists supported property lists
+      required: false
+  pkg_sources:
+  - args:
+    - -c
+    - --cache-server
+    kwargs:
+      dest: cache_server
+      help: specify a local Apple caching server (HTTPS unsupported)
+      metavar: http://example.org:12345
+      required: false
+      type: *id001
+  - args:
+    - --pkg-server
+    kwargs:
+      dest: pkg_server
+      help: specify a local http/https mirror, or hosted dmg file
+      metavar: https://example.org/packages_path/
+      required: false
+      type: *id001
