@@ -13,7 +13,7 @@ def read(f):
 
 def read_string(s):
     """Read Property List from string."""
-    result = plistlib.load(s)
+    result = plistlib.loads(s)
 
     return result
 

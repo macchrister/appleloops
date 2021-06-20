@@ -63,7 +63,7 @@ def sparse_exists(p):
 def mount(f, mountpoint=DMG_MOUNT):
     """Mount a DMG, returns the mount path if successful"""
     result = None
-    cmd = ['/usr/bin/hdiutil', 'attach', '-plist', f]
+    cmd = ['/usr/bin/hdiutil', 'attach', '-mountpoint', mountpoint, '-plist', f]
 
     if not ARGS.dry_run:
         _p = subprocess.run(cmd, capture_output=True)
@@ -104,21 +104,21 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
 
         sparse = sparse_exists(f)
 
-        if sparse_exists(f):
+        if sparse_exists(f) and Path(f).exists():
             mountpoint = sparse[0]
+            result = mount(f, mountpoint)
+        else:
+            cmd = ['/usr/bin/hdiutil', 'create', '-ov', '-plist', '-volname', vol, '-fs', fs, '-attach', '-type', 'SPARSE', f]
+            _p = subprocess.run(cmd, capture_output=True)
+            LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
 
-        cmd = ['/usr/bin/hdiutil', 'create', '-ov', '-plist', '-volname', vol,
-               '-fs', fs, '-attach', '-type', 'SPARSE', f, '-mountpoint', mountpoint]
-        _p = subprocess.run(cmd, capture_output=True)
-        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+            if _p.returncode == 0:
+                LOG.info('Created temporary sparseimage {img}'.format(img=f))
+                _entities = plist.read_string(_p.stdout).get('system-entities')
 
-        if _p.returncode == 0:
-            LOG.info('Created temporary sparseimage {img}'.format(img=f))
-            _entities = plist.read_string(_p.stdout).get('system-entities')
-
-            if _entities:
-                result = mountpoint(_entities)
-                LOG.info('Mounted sparse image to {mountpoint}'.format(mountpoint=result))
+                if _entities:
+                    result = mountpoint(_entities)
+                    LOG.info('Mounted sparse image to {mountpoint}'.format(mountpoint=result))
         else:
             LOG.info(_p.stderr.decode('utf-8').strip())
             sys.exit(88)

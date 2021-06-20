@@ -7,6 +7,20 @@ from sys import stdout, stderr
 from . import osinfo
 
 
+def add_stream(stream, filters, log):
+    """Add a stream handler."""
+    handler = logging.StreamHandler(stream)
+    handler.addFilter(lambda log: log.levelno in filters)
+
+    if stream == stdout:
+        handler.setLevel(logging.INFO)
+
+    if stream == stderr:
+        handler.setLevel(logging.ERROR)
+
+    log.addHandler(handler)
+
+
 def logging_conf(silent=False, level='INFO'):
     """Configures logging for the utility."""
     stdout_filters = [logging.INFO]
@@ -31,18 +45,10 @@ def logging_conf(silent=False, level='INFO'):
 
     # Handle printing INFO/WARNING to stdout and DEBUG/ERROR/CRITICAL to stderr
     # NOTE: DEBUG/ERROR/CRITICAL will always print out even if '-s/--silent' specified.
-    stderr_handler = logging.StreamHandler(stderr)
-    stderr_handler.addFilter(lambda log: log.levelno in stderr_filters)  # Filters only log levels required
-    stderr_handler.setFormatter(logging.Formatter('%(message)s'))
-    stderr_handler.setLevel(logging.ERROR)
-    log.addHandler(stderr_handler)
+    add_stream(stderr, stderr_filters, log)
 
     if not silent:
-        stdout_handler = logging.StreamHandler(stdout)
-        stdout_handler.addFilter(lambda log: log.levelno in stdout_filters)  # Filters only log levels required
-        stdout_handler.setFormatter(logging.Formatter('%(message)s'))
-        stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
+        add_stream(stdout, stdout_filters, log)
 
     if Path(log_path).exists():
         file_handler.doRollover()

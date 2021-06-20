@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 from . import plist
-from . import version
+from . import versions
 
 LOG = logging.getLogger(__name__)
 
@@ -24,9 +24,9 @@ def info(i):
     return result
 
 
-def pkg_vers(i):
+def pkg_version(i):
     """Return package version if installed, returns LooseVersion."""
-    return version.convert(info(i).get('pkg-version', None))
+    return versions.convert(info(i).get('pkg-version', None))
 
 
 def is_installed(files, lcl_ver, pkg_ver):
@@ -43,8 +43,8 @@ def is_installed(files, lcl_ver, pkg_ver):
         elif not files:
             files = False
 
-        lcl_ver = version.convert(lcl_ver)
-        pkg_ver = version.convert(pkg_ver)
+        lcl_ver = versions.convert(lcl_ver)
+        pkg_ver = versions.convert(pkg_ver)
 
     result = files and lcl_ver > pkg_ver
 
@@ -53,4 +53,4 @@ def is_installed(files, lcl_ver, pkg_ver):
 
 def upgrade_pkg(lcl_ver, pkg_ver):
     """Determine if package should be upgrade, returns boolean."""
-    return version.convert(lcl_ver) < version.convert(pkg_ver)
+    return versions.convert(lcl_ver) < versions.convert(pkg_ver)

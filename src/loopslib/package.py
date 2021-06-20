@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from . import curl
-from . import version
+from . import versions
 from . import pkgutil
 from . import ARGS
 from . import DMG_MOUNT
@@ -25,8 +25,7 @@ class LoopPackage:
         self.file_check = kwargs.get('FileCheck', None)
         self.installed_size = kwargs.get('InstalledSize', None)
         self.mandatory = kwargs.get('IsMandatory', False)
-        self.package_name = kwargs.get('PackageName', None)
-        self.version = version.convert(kwargs.get('PackageVersion', '0.0.0'))
+        self.version = versions.convert(kwargs.get('PackageVersion', '0.0.0'))
 
         # Modify Apple attributes
         self.package_id = self.package_id.replace('. ', '') if self.package_id else None  # Apple typo fix
@@ -36,12 +35,12 @@ class LoopPackage:
                 self.installed_size = float(self.installed_size)
 
         # Set custom attributes
+        self.installed_version = pkgutil.pkg_version(self.package_id) if self.package_id else None
         self.installed = pkgutil.is_installed(self.file_check, self.installed_version, self.version)
         self.upgrade = pkgutil.upgrade_pkg(self.installed_version, self.version)
         self.url = self.parse_url(self.download_name)
         self.download_dest = self.parse_dest(self.download_name)
         self.download_size = curl.headers(self.url).get('content-length', 0)
-        self.installed_version = pkgutil.pkg_version(self.package_id) if self.package_id else None
         self.badwolf_ignore = False
         self.status = curl.status(self.url)
 
@@ -72,6 +71,7 @@ class LoopPackage:
         _re = re.compile(r'lp10_ms3_content_2016/../lp10_ms3_content_2013')
         url = '{}/{}'.format(FEED_URL, n)
         url = re.sub(_re, 'lp10_ms3_content_2013', url)
+        _url = url
         LOG.debug('Set package URL to {url}'.format(url=url))
 
         # Change the URL if cache server is specified
@@ -88,7 +88,10 @@ class LoopPackage:
             else:
                 url = url.replace(FEED_URL, ARGS.pkg_server)
 
-        LOG.debug('Updated package URL to {url}'.format(url=url))
+        # Only log the URL update if the url differs
+        if url != _url:
+            LOG.debug('Updated package URL to {url}'.format(url=url))
+
         result = url
 
         return result

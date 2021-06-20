@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 from pathlib import PurePath
 
-from . import ARGS
 from . import USER_AGENT
 
 LOG = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ def status(u):
     return result
 
 
-def get(u, dest, quiet=False, resume=False, dry_run=False):
+def get(u, dest, quiet=False, resume=False, http2=False, insecure=False, dry_run=False):
     """Fetch HTTP/HTTPS resource to local destination, return a file path object as the result"""
     result = None
 
@@ -89,13 +88,13 @@ def get(u, dest, quiet=False, resume=False, dry_run=False):
         _cmd.append('--compressed')
 
     # HTTP2
-    if ARGS.http2:
+    if http2:
         _cmd.append('--http2')
     else:
         _cmd.append('--http1.1')
 
     # Insecure TLS - not recommended
-    if ARGS.insecure:
+    if insecure:
         _cmd.append('--insecure')
 
     if not dry_run:
