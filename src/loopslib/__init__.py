@@ -5,9 +5,14 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
+from . import osinfo
+
+if not osinfo.python_compatible():
+    print('Python 3.9.5 is required.')
+    sys.exit(1)
+
 from . import messages
 from . import configuration
-from . import osinfo
 
 silent = any([_arg in ['--silent', '-s'] for _arg in sys.argv])
 log_level = 'DEBUG' if any([_arg.lower() == 'debug' for _arg in sys.argv]) else 'INFO'

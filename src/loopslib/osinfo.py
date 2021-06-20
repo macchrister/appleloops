@@ -68,3 +68,16 @@ def python_ver():
     result = 'Python {version}'.format(version=' '.join(sys.version.splitlines()))
 
     return result
+
+
+def python_compatible():
+    """Check if python version is minimum required."""
+    result = False
+    req_ver = vers.convert('3.9.5')
+    pythonver = vers.convert('{major}.{minor}.{micro}'.format(major=sys.version_info.major,
+                                                              minor=sys.version_info.minor,
+                                                              micro=sys.version_info.micro))
+
+    result = pythonver >= req_ver
+
+    return result
