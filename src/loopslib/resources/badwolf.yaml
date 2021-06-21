@@ -62,51 +62,6 @@ garageband1021.plist:               # Feed for GarageBand versions using the gar
     IsMandatory: true
   MAContent10_AssetPack_0509_EXS_StringsEnsemble:
     IsMandatory: true
-garageband1040.plist:  # Testing only, delete before production release
-  GarageBand11ExtraContentPackage:
-    BadWolfIgnore: true
-  IRsSurroundPackage:
-    BadWolfIgnore: true
-  JamPack1AppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPack1InstrumentsPackage:
-    BadWolfIgnore: true
-  JamPackRemixToolsAppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPackRemixToolsInstrumentsPackage:
-    BadWolfIgnore: true
-  JamPackRhythmSectionAppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPackRhythmSectionInstrumentsPackage:
-    BadWolfIgnore: true
-  JamPackSymphonyOrchestraAppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPackSymphonyOrchestraInstrumentsPackage:
-    BadWolfIgnore: true
-  JamPackVoicesAppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPackVoicesInstrumentsPackage:
-    BadWolfIgnore: true
-  JamPackWorldMusicAppleLoopsPackage:
-    BadWolfIgnore: true
-  JamPackWorldMusicInstrumentsPackage:
-    BadWolfIgnore: true
-  Logic9LegacyContentPackage:
-    BadWolfIgnore: true
-  MAContent10_AssetPack_0357_EXS_BassAcousticUprightJazz:
-    IsMandatory: true
-  MAContent10_AssetPack_0358_EXS_BassElectricFingerStyle:
-    IsMandatory: true
-  MAContent10_AssetPack_0482_EXS_OrchWoodwindAltoSax:
-    IsMandatory: true
-  MAContent10_AssetPack_0484_EXS_OrchWoodwindClarinetSolo:
-    IsMandatory: true
-  MAContent10_AssetPack_0487_EXS_OrchWoodwindFluteSolo:
-    IsMandatory: true
-  MAContent10_AssetPack_0491_EXS_OrchBrass:
-    IsMandatory: true
-  MAContent10_AssetPack_0509_EXS_StringsEnsemble:
-    IsMandatory: true
 # ----- Logic Pro ----- #
 logicpro1050.plist:
   MAContent10_AssetPack_0755_AppleLoopsPrismatica:
