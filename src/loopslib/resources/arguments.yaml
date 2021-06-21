@@ -23,6 +23,13 @@ standard:
       help: force action (only for downloads/deployments)
       required: false
   - args:
+    - --flat
+    kwargs:
+      action: store_true
+      dest: flat_mirror
+      help: download content into a single folder
+      required: false
+  - args:
     - --http2
     kwargs:
       action: store_true

@@ -11,6 +11,7 @@ from . import plist
 from . import APPLICATIONS
 from . import APPLICATION_FOLDER
 from . import ARGS
+from . import FEED_URL
 from . import HTTP_OK
 from . import TEMPDIR
 
@@ -62,7 +63,7 @@ class Application:
 class PropertyList:
     """Property list source of audio content packages."""
     def __init__(self, plist):
-        self.plist = plist
+        self.plist = '{feedurl}/{plist}'.format(feedurl=FEED_URL, plist=plist)
         self.packages = self.parse_plist()
 
     def parse_plist(self):
@@ -72,11 +73,11 @@ class PropertyList:
 
         # If the file is a URL, it needs to be fetched first
         if url.scheme and url.scheme in ['http', 'https']:
-            dest = TEMPDIR / url.path
+            dest = Path('{tmp}/{fp}'.format(tmp=str(TEMPDIR), fp=url.path.lstrip('/')))
 
-            if curl.status(plist) in HTTP_OK:
+            if curl.status(self.plist) in HTTP_OK:
                 # NOTE: Always get this property list silently even in a dry run.
-                f = curl.get(u=plist, dest=str(dest), quiet=True, http2=ARGS.http2, insecure=ARGS.insecure, dry_run=False)
+                f = curl.get(u=self.plist, dest=str(dest), quiet=True, http2=ARGS.http2, insecure=ARGS.insecure, dry_run=False)
 
                 if f and dest.exists():
                     LOG.debug('Fetched {plist}'.format(plist=self.plist))
@@ -91,6 +92,9 @@ class PropertyList:
                 elif not dest.exists():
                     LOG.info('{plist} not found'.format(plist=dest))
         elif not url.scheme or isinstance(plist, (Path)):
+            if not isinstance(self.plist, Path):
+                self.plist = Path(self.plist)
+
             if self.plist.exists():
                 result = plist.read(self.plist).get('Packages', None)
 

@@ -12,8 +12,8 @@ LOG = logging.getLogger(__name__)
 def info(i):
     """Returns output of '/usr/sbin/pkgutil'"""
     result = dict()
-    _cmd = ['/usr/sbin/pkgutil', '--pkg-info-plist', i]
-    _p = subprocess.run(_cmd, capture_output=True)  # leave output as bytes for plist string read
+    cmd = ['/usr/sbin/pkgutil', '--pkg-info-plist', i]
+    _p = subprocess.run(cmd, capture_output=True)  # leave output as bytes for plist string read
 
     if _p.returncode == 0:
         result = plist.read_string(_p.stdout)

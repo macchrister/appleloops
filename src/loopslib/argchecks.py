@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from . import curl
 from . import osinfo
+from . import DMG_MOUNT
 from . import HTTP_OK
 from . import HTTP_MIRROR_TEST_PATHS
 
@@ -29,6 +30,9 @@ def check(args, helper):
         if not osinfo.isroot():
             LOG.error('You must be root to run in deployment mode.')
             sys.exit(66)
+
+        if args.flat_mirror:
+            error(msg='--flat: not allowed with argument --deployment', fatal=True, helper=helper, returncode=61)
 
     # Must provide 'mandatory' or 'optional' package set
     if not (args.mandatory or args.optional):
@@ -93,8 +97,10 @@ def check(args, helper):
     if args.destination:
         args.destination = Path(args.destination)
 
+    # Build DMG - also set the destination to be the DMG
     if args.build_dmg:
         args.build_dmg = Path(args.build_dmg)
+        args.destination = DMG_MOUNT
 
     result = args
 

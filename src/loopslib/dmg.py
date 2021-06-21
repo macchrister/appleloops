@@ -60,10 +60,14 @@ def sparse_exists(p):
     return result
 
 
-def mount(f, mountpoint=DMG_MOUNT):
+def mount(f, mountpoint=DMG_MOUNT, read_only=False):
     """Mount a DMG, returns the mount path if successful"""
     result = None
-    cmd = ['/usr/bin/hdiutil', 'attach', '-mountpoint', mountpoint, '-plist', f]
+    cmd = ['/usr/bin/hdiutil', 'attach', '-mountpoint', str(mountpoint), '-plist', f]
+
+    # Insert read only option in the correct spot
+    if read_only:
+        cmd.insert(2, '-readonly')
 
     if not ARGS.dry_run:
         _p = subprocess.run(cmd, capture_output=True)
@@ -83,7 +87,7 @@ def mount(f, mountpoint=DMG_MOUNT):
 
 def eject(mountpoint=DMG_MOUNT):
     """Eject a mounted DMG"""
-    cmd = ['/usr/bin/hdiutil', 'eject', '-quiet', mountpoint]
+    cmd = ['/usr/bin/hdiutil', 'eject', '-quiet', str(mountpoint)]
     _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
     LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
 
@@ -108,7 +112,7 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
             mountpoint = sparse[0]
             result = mount(f, mountpoint)
         else:
-            cmd = ['/usr/bin/hdiutil', 'create', '-ov', '-plist', '-volname', vol, '-fs', fs, '-attach', '-type', 'SPARSE', f]
+            cmd = ['/usr/bin/hdiutil', 'create', '-ov', '-plist', '-volname', vol, '-fs', fs, '-attach', '-type', 'SPARSE', str(f)]
             _p = subprocess.run(cmd, capture_output=True)
             LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
 
@@ -119,9 +123,9 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
                 if _entities:
                     result = mountpoint(_entities)
                     LOG.info('Mounted sparse image to {mountpoint}'.format(mountpoint=result))
-        else:
-            LOG.info(_p.stderr.decode('utf-8').strip())
-            sys.exit(88)
+            else:
+                LOG.info(_p.stderr.decode('utf-8').strip())
+                sys.exit(88)
 
     return result
 
@@ -129,7 +133,7 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
 def convert_sparse(s, f):
     """Converts a sparse image to DMG, returns the DMG path if successful"""
     result = None
-    cmd = ['/usr/bin/hdiutil', 'convert', '-ov', '-quiet', s, '-format', 'UDZO', '-o', f]
+    cmd = ['/usr/bin/hdiutil', 'convert', '-ov', '-quiet', str(s), '-format', 'UDZO', '-o', str(f)]
 
     if not ARGS.dry_run:
         LOG.info('Converting {sparseimage}'.format(sparseimage=s))

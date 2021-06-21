@@ -12,8 +12,12 @@ LOG = logging.getLogger(__name__)
 def headers(u):
     """Headers of an HTTP/HTTPS resource"""
     result = dict()
-    _cmd = ['/usr/bin/curl', '-I', '-L', '--user-agent', USER_AGENT, u]
-    _p = subprocess.run(_cmd, capture_output=True, encoding='utf-8')
+    cmd = ['/usr/bin/curl', '-I', '-L', '--user-agent', USER_AGENT, u]
+    _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
+
+    # Convert URL from path object to string if path
+    if isinstance(u, (Path, PurePath)):
+        u = str(u)
 
     if _p.returncode == 0:
         _lines = _p.stdout.strip().splitlines()
@@ -31,7 +35,7 @@ def headers(u):
 
                 result[_k.lower().strip()] = _v
 
-    LOG.debug('{cmd} [exit code {returncode}]'.format(cmd=' '.join(_cmd), returncode=_p.returncode))
+    LOG.debug('{cmd} [exit code {returncode}]'.format(cmd=' '.join(cmd), returncode=_p.returncode))
     LOG.debug(result)
 
     return result
@@ -40,18 +44,30 @@ def headers(u):
 def is_compressed(u):
     """Return boolean if HTTP/HTTPS resource is compressed"""
     # NOTE: At present (2021-06-15), the only encoding seen is 'gzip' type, but that may change
-    return headers(u).get('content-encoding') == 'gzip'
+    # Convert URL from path object to string if path
+    result = None
+
+    if isinstance(u, (Path, PurePath)):
+        u = str(u)
+
+    result = headers(u).get('content-encoding') == 'gzip'
+
+    return result
 
 
 def status(u):
     """Status code of an HTTP/HTTPS resource"""
     result = None
-    _cmd = ['/usr/bin/curl', '-I', '-L', '--silent', '-o', '/dev/null', '-w', '"%{http_code}"', '--user-agent', USER_AGENT, u]
-    _p = subprocess.run(_cmd, capture_output=True, encoding='utf-8')
 
+    # Convert URL from path object to string if path
+    if isinstance(u, (Path, PurePath)):
+        u = str(u)
+
+    cmd = ['/usr/bin/curl', '-I', '-L', '--silent', '-o', '/dev/null', '-w', '"%{http_code}"', '--user-agent', USER_AGENT, u]
+    _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
     result = int(_p.stdout.strip().replace('"', ''))
 
-    LOG.debug('{cmd} ({http_status}) [exit code {returncode}]'.format(cmd=' '.join(_cmd),
+    LOG.debug('{cmd} ({http_status}) [exit code {returncode}]'.format(cmd=' '.join(cmd),
                                                                       http_status=result,
                                                                       returncode=_p.returncode))
 
@@ -66,43 +82,47 @@ def get(u, dest, quiet=False, resume=False, http2=False, insecure=False, dry_run
     if isinstance(dest, (Path, PurePath)):
         dest = str(dest)
 
+    # Convert URL from path object to string if path
+    if isinstance(u, (Path, PurePath)):
+        u = str(u)
+
     # Build the command
-    _cmd = ['/usr/bin/curl', '-L', '--user-agent', USER_AGENT, u, '--create-dirs', '-o', dest]
+    cmd = ['/usr/bin/curl', '-L', '--user-agent', USER_AGENT, u, '--create-dirs', '-o', dest]
 
     if quiet:
-        _cmd.append('--silent')
+        cmd.append('--silent')
     else:
-        _cmd.append('--progress-bar')
+        cmd.append('--progress-bar')
 
     # NOTE: Resume really only works for packages and may not actually work as expected
     # if the server doesn't support resume.
     # For example, the Apple audiocontent servers don't seem to properly support resume
     # for the plist files they host, but do for the package files.
     if resume and '.pkg' in u:
-        _cmd.append('-C')
-        _cmd.append('-')
+        cmd.append('-C')
+        cmd.append('-')
 
     # Check for compression on the fly and add in the relevant flag to handle it
     if is_compressed(u):
         LOG.debug('Compressed resource found, updating cURL command')
-        _cmd.append('--compressed')
+        cmd.append('--compressed')
 
     # HTTP2
     if http2:
-        _cmd.append('--http2')
+        cmd.append('--http2')
     else:
-        _cmd.append('--http1.1')
+        cmd.append('--http1.1')
 
     # Insecure TLS - not recommended
     if insecure:
-        _cmd.append('--insecure')
+        cmd.append('--insecure')
 
     if not dry_run:
         # Even though assigned, the progress bar will still output to stdout.
-        _p = subprocess.run(_cmd)
+        _p = subprocess.run(cmd)
 
     # Log curl command before reverting dest to path object
-    LOG.debug('{cmd} [exit code {returncode}]'.format(cmd=' '.join(_cmd), returncode=_p.returncode))
+    LOG.debug('{cmd} [exit code {returncode}]'.format(cmd=' '.join(cmd), returncode=_p.returncode))
 
     # Reconvert the destination to a path object
     dest = Path(dest)

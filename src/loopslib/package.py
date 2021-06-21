@@ -2,7 +2,7 @@ import logging
 import re
 import subprocess
 
-from pathlib import Path
+from pathlib import Path, PurePath
 from urllib.parse import urlparse
 
 from . import curl
@@ -39,10 +39,11 @@ class LoopPackage:
         self.installed = pkgutil.is_installed(self.file_check, self.installed_version, self.version)
         self.upgrade = pkgutil.upgrade_pkg(self.installed_version, self.version)
         self.url = self.parse_url(self.download_name)
-        self.download_dest = self.parse_dest(self.download_name)
+        self.download_dest = self.parse_dest(self.url)
         self.download_size = curl.headers(self.url).get('content-length', 0)
         self.badwolf_ignore = False
         self.status = curl.status(self.url)
+        self.download_name = str(PurePath(self.download_name).name)  # Make the download name friendly
 
         # Add self.package_id to INSTANCES tracker
         self.__class__.INSTANCES.add(self.package_id)
@@ -65,12 +66,20 @@ class LoopPackage:
         else:
             return NotImplemented
 
+    def _regex_parse_string(self, s):
+        """Parses a url/path to fix the folder path"""
+        result = None
+        reg = re.compile(r'lp10_ms3_content_2016/../lp10_ms3_content_2013')
+        swap = 'lp10_ms3_content_2013'
+        result = re.sub(reg, swap, s)
+
+        return result
+
     def parse_url(self, n):
         """Parse a URL to use for downloading."""
         result = None
-        _re = re.compile(r'lp10_ms3_content_2016/../lp10_ms3_content_2013')
-        url = '{}/{}'.format(FEED_URL, n)
-        url = re.sub(_re, 'lp10_ms3_content_2013', url)
+        url = '{feedurl}/{pkgname}'.format(feedurl=FEED_URL, pkgname=n)
+        url = self._regex_parse_string(url)
         _url = url
         LOG.debug('Set package URL to {url}'.format(url=url))
 
@@ -96,20 +105,23 @@ class LoopPackage:
 
         return result
 
-    def parse_dest(self, n):
+    def parse_dest(self, u):
         """Parse a download destination."""
         result = None
-        _re = re.compile(r'lp10_ms3_content_2016/../lp10_ms3_content_2013')
-        dest = '{}/{}'.format(ARGS.destination, n)
 
-        result = Path(re.sub(_re, 'lp10_ms3_content_2013', dest))
+        if ARGS.flat_mirror:
+            dest = '{dest}/{pkgname}'.format(dest=ARGS.destination, pkgname=PurePath(u).name)
+        else:
+            dest = '{dest}/{pkgname}'.format(dest=ARGS.destination, pkgname=urlparse(u).path.lstrip('/'))
+
+        result = Path(self._regex_parse_string(dest))
 
         return result
 
     def install(self):
         """Install package, returns a tuple with the process returncode at [0] and success/error message at [1]"""
         result = None
-        cmd = ['/usr/sbin/installer', '-dumplog', '-pkg', self.download_dest, '-target', ARGS.install_target]
+        cmd = ['/usr/sbin/installer', '-dumplog', '-pkg', str(self.download_dest), '-target', str(ARGS.install_target)]
 
         # Insert the untrusted flag into the correct part of the install command
         if ARGS.unsigned:
