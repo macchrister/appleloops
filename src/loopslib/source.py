@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from . import badwolf
 from . import curl
+from . import osinfo
 from . import plist
 from . import APPLICATIONS
 from . import APPLICATION_FOLDER
@@ -23,8 +24,16 @@ class Application:
     def __init__(self, app):
         self.app = app
         self.f = Path(APPLICATION_FOLDER) / APPLICATIONS[self.app] / 'Contents/Resources'
-        self.packages = self.parse_plist()
         self.installed = self.f.exists()
+
+        if self.installed:
+            info = self.appinfo
+            LOG.warning('{app} {version} requires macOS {minos} (macOS {osver} installed)'.format(app=info.name,
+                                                                                                  version=info.ver,
+                                                                                                  minos=info.min_os,
+                                                                                                  osver=osinfo.version()))
+
+        self.packages = self.parse_plist()
 
     def parse_plist(self):
         """Parses the plist."""
