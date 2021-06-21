@@ -1,6 +1,7 @@
 import logging
 
 from pathlib import Path, PurePath
+from pprint import pformat
 
 from . import package
 from . import resource
@@ -52,8 +53,11 @@ def patch(packages, source):
 
     # Iterate and patch
     for _pkg, _attrs in _packages.items():
+        _original_attrs = _attrs.copy()
+        _new_attrs = _attrs.copy()
         _pkg_id = _attrs.get('PackageID', None)
         _patched_attrs = patches.get(_pkg, None)
+        _badwolf_ignore = _patched_attrs.get('BadWolfIgnore', False) if _patched_attrs else False
         _padded_count = '{i:0{width}d}'.format(width=len(str(total)), i=counter)
         # Not really a warning, but this is the easiest way to not print to stdout when logging with the stdout/stderr
         # stream handlers set up in 'messages'.
@@ -61,14 +65,23 @@ def patch(packages, source):
 
         # Patch
         if _patched_attrs:
-            _attrs.update(_patched_attrs)
-            LOG.debug('Patched attributes for {pkg}'.format(pkg=_pkg))
+            _new_attrs.update(_patched_attrs)
+
+            if not _original_attrs == _new_attrs:
+                LOG.debug('Original attributes for {pkg}:\n{attrs}'.format(pkg=_pkg, attrs=pformat(_original_attrs)))
+                LOG.debug('Patched attributes for {pkg}:\n{attrs}'.format(pkg=_pkg, attrs=pformat(_new_attrs)))
+            elif _original_attrs == _new_attrs:
+                LOG.warning('Skipped patching {pkg} in {source} as attributes are correct'.format(pkg=_pkg, source=source))
+                _new_attrs = None
+
+        if _badwolf_ignore:
+            LOG.debug('Ignoring package {pkg} per BadWolfIgnore in {source}'.format(pkg=_pkg, source=source))
 
         # Avoid instancing something that already is instanced
         if _pkg_id and _pkg_id not in package.LoopPackage.INSTANCES:
-            pkg = package.LoopPackage(**_attrs)
+            pkg = package.LoopPackage(**_attrs) if not _new_attrs else package.LoopPackage(**_new_attrs)
 
-            if not pkg.badwolf_ignore:
+            if not _badwolf_ignore:
                 result.add(pkg)
         elif _pkg_id and _pkg_id in package.LoopPackage.INSTANCES:
             LOG.debug('Already processed {pkgid} - skipping'.format(pkgid=_pkg_id))
