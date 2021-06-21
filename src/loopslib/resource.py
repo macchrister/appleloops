@@ -21,6 +21,6 @@ def read(resource, package='loopslib.resources', **kwargs):
 
     f.close()
 
-    LOG.debug('Read resource file {}/{}'.format(package.replace('.', '/'), resource))
+    LOG.debug('Read resource file {package}/{resource}'.format(package=package.replace('.', '/'), resource=resource))
 
     return result
