@@ -70,3 +70,12 @@ logicpro1050.plist:
   MAContent10_AssetPack_0796_DemosongLogicoceaneyes:
     FileCheck: /Library/Application Support/Logic/Logic Pro X Demosongs/ocean eyes.logicx/Alternatives/001/DisplayState.plist
 # ----- MainsStage ----- #
+mainstage323.plist:
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+mainstage324.plist:
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+mainstage330.plist:
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround

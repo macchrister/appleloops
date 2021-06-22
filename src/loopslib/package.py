@@ -44,6 +44,7 @@ class LoopPackage:
         self.badwolf_ignore = False
         self.status = curl.status(self.url)
         self.download_name = str(PurePath(self.download_name).name)  # Make the download name friendly
+        self.sequence_number = self.parse_seq_number(self.download_name)
 
         # Add self.package_id to INSTANCES tracker
         self.__class__.INSTANCES.add(self.package_id)
@@ -72,6 +73,16 @@ class LoopPackage:
         reg = re.compile(r'lp10_ms3_content_2016/../lp10_ms3_content_2013')
         swap = 'lp10_ms3_content_2013'
         result = re.sub(reg, swap, s)
+
+        return result
+
+    def parse_seq_number(self, p):
+        """Parse out a sequence number from the package name"""
+        result = None
+        reg = re.compile(r'_\d+_')
+
+        if re.findall(reg, p):
+            result = int(re.findall(reg, p)[0].replace('_', ''))
 
         return result
 

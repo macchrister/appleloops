@@ -8,7 +8,7 @@ from pathlib import Path
 from . import osinfo
 
 if not osinfo.python_compatible():
-    print('Python 3.9.5 is required.')
+    LOG.info('Python 3.9.5 is required.')
     sys.exit(1)
 
 from . import messages

@@ -83,12 +83,11 @@ def patch(packages, source):
 
             if not _badwolf_ignore:
                 result.add(pkg)
+                LOG.debug('{attrs}'.format(attrs=pkg.__dict__))
         elif _pkg_id and _pkg_id in package.LoopPackage.INSTANCES:
             LOG.debug('Already processed {pkgid} - skipping'.format(pkgid=_pkg_id))
 
-        LOG.debug('{attrs}'.format(attrs=pkg.__dict__))
         _msg = 'Processed ({count} of {total}) - {pkgid}'.format(pkgid=_pkg_id, count=_padded_count, total=total)
-
         counter += 1
         # Add an extra line in the debug output for readability
         if counter - 1 != total:

@@ -33,7 +33,9 @@ class Application:
                                                                                                   minos=info.min_os,
                                                                                                   osver=osinfo.version()))
 
-        self.packages = self.parse_plist()
+            self.packages = self.parse_plist()
+        else:
+            self.packages = None
 
     def parse_plist(self):
         """Parses the plist."""

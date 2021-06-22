@@ -1,22 +1,27 @@
 import logging
 import shutil
+import sys
+
+from pathlib import Path, PurePath
 
 from . import curl
 from . import disk
 from . import dmg
 from . import source
 from . import ARGS
+from . import DMG_DEFAULT_FS
+from . import DMG_MOUNT
 from . import TEMPDIR
 
 LOG = logging.getLogger(__name__)
 
+
 def init_dmg():
     """Creates sparseimages for DMG building."""
-    result = None
+    result = (None, None, None)  # Avoids unpacking errors if no sparse image is created
 
     # Create a sparse image if building a DMG
     if ARGS.build_dmg and not ARGS.dry_run:
-        fs = DMG_DEFAULT_FS
         result = dmg.create_sparse(f=ARGS.build_dmg, fs=DMG_DEFAULT_FS)
 
     return result
@@ -45,43 +50,43 @@ def apps_plists():
         LOG.info('Processing Apple audio content, this may take some time.')
 
     if not ARGS.deployment:
-        LOG.info('Download destination is {download_dest}'.format(download_dest=ARGS.destination))
+        if ARGS.build_dmg:
+            dest_msg = 'Download destination is {download_dest} (mounted to {mount})'.format(download_dest=ARGS.build_dmg, mount=DMG_MOUNT)
+        else:
+            dest_msg = 'Download destination is {download_dest}'.format(download_dest=ARGS.destination)
+
+        LOG.info(dest_msg)
 
     # Process any apps
     if ARGS.apps:
-        if 'garageband' in ARGS.apps:
-            garageband = source.Application(app='garageband')
+        for application in ARGS.apps:
+            a = source.Application(app=application)
 
-            if garageband and garageband.packages:
-                _packages.update(garageband.packages)
+            if a.installed:
+                if a.packages:
+                    _packages.update(a.packages)
+            else:
+                LOG.info('No application installed for {app}, skipping'.format(app=application))
 
-        if 'logicpro' in ARGS.apps:
-            logicpro = source.Application(app='garageband')
-
-            if logicpro and logicpro.packages:
-                _packages.update(logicpro.packages)
-
-        if 'mainstage' in ARGS.apps:
-            mainstage = source.Application(app='mainstage')
-
-            if mainstage and mainstage.packages:
-                _packages.update(mainstage.packages)
-
+    # Process any plists
     if ARGS.plists:
         for plist in ARGS.plists:
-            app = source.PropertyList(plist=plist)
+            p = source.PropertyList(plist=plist)
 
-            if app and app.packages:
-                _packages.update(app.packages)
+            if p and p.packages:
+                _packages.update(p.packages)
 
     # If deploying packages, only return those that are being upgraded/installed (or forced install)
     if _packages:
         if ARGS.deployment:
-            packages = {pkg for pkg in packages if pkg.upgrade or not pkg.installed or ARGS.force}
+            packages = [pkg for pkg in _packages if pkg.upgrade or not pkg.installed or ARGS.force]
         else:
-            packages = _packages
+            packages = [pkg for pkg in _packages]
 
-        packages = set(sorted(list(packages), key=lambda pkg: pkg.download_name))
+    # Sort the packages by the sequence number if it exists, else by name
+    _unsequenced_packages = sorted([pkg for pkg in packages if not pkg.sequence_number], key=lambda pkg: pkg.download_name)
+    _sequenced_packages = sorted([pkg for pkg in packages if pkg.sequence_number], key=lambda pkg: pkg.sequence_number)
+    packages = _unsequenced_packages + _sequenced_packages
 
     result = (garageband, logicpro, mainstage, packages)
 
@@ -99,7 +104,7 @@ def freespace_checks(packages):
     required_inst_space += sum([pkg.installed_size for pkg in packages])
     required_totl_space = sum([required_disk_space, required_inst_space])
 
-    if ARGS.deployment and ARGS.pkg_server.endswith('.dmg'):
+    if ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
         has_freespace = required_inst_space < disk.freespace(d=ARGS.install_target).bytes
         drive_dest = ARGS.install_target
     elif ARGS.deployment:
@@ -173,10 +178,26 @@ def download_install(packages):
         counter += 1
 
 
-def cleanup_tempdir():
+def convert_sparse(s, f=ARGS.build_dmg):
+    """Convert the sparseimage into a DMG"""
+    if not ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
+        converted_sparseimage = dmg.convert_sparse(s=sparseimage, f=ARGS.build_dmg)
+
+        # Tidy up the temporary sparseimage
+        if converted_sparseimage:
+            sparseimage.unlink(missing_ok=True)
+
+            if not sparseimage.exists():
+                LOG.warning('Tidied up sparse image {image}'.format(image=str(sparseimage)))
+
+
+def cleanup():
     """Cleans up temporary working directory"""
     if TEMPDIR.exists():
         shutil.rmtree(str(TEMPDIR), ignore_errors=True)
 
         if not TEMPDIR.exists():
             LOG.warning('Tidied up temporary working directory.')
+
+    if Path(DMG_MOUNT).exists():
+        dmg.eject()

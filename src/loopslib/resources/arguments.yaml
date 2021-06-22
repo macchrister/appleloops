@@ -149,11 +149,6 @@ mutually_exclusive:
       metavar: <app>
       nargs: +
       required: false
-      choices:
-        - garageband
-        - logicpro
-        - mainstage
-        - allapps
       type: *id001
   - args:
     - --compare
@@ -164,6 +159,14 @@ mutually_exclusive:
       nargs: 2
       required: false
       type: *id001
+  - args:
+    - --fetch-latest
+    kwargs:
+      dest: fetch_latest
+      help: fetch latest content for apps
+      metavar: <app>
+      nargs: +
+      required: false
   - args:
     - -p
     - --plists

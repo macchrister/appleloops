@@ -1,3 +1,5 @@
+#!/usr/local/bin/python3
+
 import logging
 import sys
 
@@ -23,7 +25,7 @@ def error(msg, helper, fatal=False, returncode=1):
         sys.exit(returncode)
 
 
-def check(args, helper):
+def check(args, helper, choices):
     """Check arguments for specific conditions"""
     # Deployment - must be root
     if args.deployment:
@@ -101,6 +103,19 @@ def check(args, helper):
     if args.build_dmg:
         args.build_dmg = Path(args.build_dmg)
         args.destination = DMG_MOUNT
+
+    if args.apps and 'all' in args.apps:
+        args.apps = [c for c in choices['supported'] if c != 'all']
+        print(args.apps)
+
+    if args.plists and 'all' in args.plists:
+        args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
+
+    if args.fetch_latest:
+        if 'all' in args.fetch_latest:
+            args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
+        else:
+            args.plists = ['{choice}.plist'.format(choice=c) for _k, c in choices['latest'].items() if _k in args.fetch_latest]
 
     result = args
 

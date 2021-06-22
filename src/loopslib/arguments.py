@@ -1,6 +1,5 @@
 import argparse
 import logging
-import sys
 
 from . import argchecks
 from . import resource
@@ -63,14 +62,20 @@ def create(choices):
             _kwargs = argset['kwargs']
 
             # Add specific choice options
-            if '--apps' in _args:
+            if '--apps' in _args in _args:
                 _kwargs['choices'] = choices['supported']
+                _kwargs['choices'].insert(0, 'all')
+
+            if '--fetch-latest' in _args:
+                _kwargs['choices'] = choices['supported']
+                _kwargs['choices'].insert(0, 'all')
 
             if '--plists' in _args:
                 _kwargs['choices'] = choices['plists']
+                _kwargs['choices'].insert(0, 'all')
 
             mut_excl_prsr[mex_args].add_argument(*_args, **_kwargs)
 
-    result = argchecks.check(args=parser.parse_args(), helper=parser.print_usage)
+    result = argchecks.check(args=parser.parse_args(), helper=parser.print_usage, choices=choices)
 
     return result
