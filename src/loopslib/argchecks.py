@@ -2,7 +2,7 @@ import logging
 import re
 import sys
 
-from pathlib import Path
+from pathlib import Path, PurePath
 from urllib.parse import urlparse
 
 from . import curl
@@ -28,12 +28,9 @@ def check(args, helper, choices):
     """Check arguments for specific conditions"""
     # Deployment - must be root
     if args.deployment:
-        if not osinfo.isroot():
+        if not osinfo.isroot() and not args.dry_run:
             LOG.error('You must be root to run in deployment mode.')
             sys.exit(66)
-
-        if args.flat_mirror:
-            error(msg='--flat: not allowed with argument --deployment', fatal=True, helper=helper, returncode=61)
 
     # Must provide 'mandatory' or 'optional' package set
     if not (args.mandatory or args.optional):
@@ -71,7 +68,7 @@ def check(args, helper, choices):
             error(msg='--pkg-server: HTTP/HTTPS scheme required', fatal=True, helper=helper, returncode=56)
 
         # If the pkg server is not a DMG
-        if not args.pkg_server.endswith('.dmg'):
+        if not PurePath(args.pkg_server).suffix == '.dmg':
             # Test the mirror has either of the expected mirroring folders per Apple servers
             if not any([curl.status('{mirror}/{testpath}'.format(mirror=args.pkg_server, testpath=_p)) in HTTP_OK
                         for _p in HTTP_MIRROR_TEST_PATHS]):
@@ -80,7 +77,7 @@ def check(args, helper, choices):
                 _msg = ('--pkg-server: mirrored content cannot be found, please ensure packages exist in '
                         '{testpaths}'.format(testpaths=', and/or '.join(_test_paths)))
                 error(msg=_msg, fatal=True, helper=helper, returncode=55)
-        elif args.pkg_server.endswith('.dmg'):
+        elif PurePath(args.pkg_server).suffix == '.dmg':
             # Test if the supplied DMG path exists
             if not url.scheme:
                 args.pkg_server = Path(args.pkg_server)
@@ -124,6 +121,7 @@ def check(args, helper, choices):
         reg = re.compile(r'\d+.plist')
         prefix_a = re.sub(reg, '', args.compare[0])
         prefix_b = re.sub(reg, '', args.compare[1])
+        args.compare_style = 'compare' if not args.compare_style else args.compare_style  # Set a default if no compare style provided
 
         if prefix_a != prefix_b:
             error(msg='--compare: cannot compare property lists for different applications', fatal=True, helper=helper, returncode=52)
