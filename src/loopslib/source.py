@@ -73,7 +73,8 @@ class Application:
 
 class PropertyList:
     """Property list source of audio content packages."""
-    def __init__(self, plist):
+    def __init__(self, plist, comparing=False):
+        self.comparing = comparing  # Used for badwolf - process ALL packages
         self.plist = '{feedurl}/{plist}'.format(feedurl=FEED_URL, plist=plist)
         self.packages = self.parse_plist()
 
@@ -112,6 +113,6 @@ class PropertyList:
         # Patch and create instances of packages
         if result:
             LOG.debug('Loaded packages from {plist}'.format(plist=self.plist))
-            result = badwolf.patch(packages=result, source=self.plist)
+            result = badwolf.patch(packages=result, source=self.plist, comparing=self.comparing)
 
         return result
