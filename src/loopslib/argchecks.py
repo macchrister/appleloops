@@ -1,6 +1,5 @@
-#!/usr/local/bin/python3
-
 import logging
+import re
 import sys
 
 from pathlib import Path
@@ -104,18 +103,34 @@ def check(args, helper, choices):
         args.build_dmg = Path(args.build_dmg)
         args.destination = DMG_MOUNT
 
+    # Handle all apps
     if args.apps and 'all' in args.apps:
         args.apps = [c for c in choices['supported'] if c != 'all']
-        print(args.apps)
 
+    # Handle all plists
     if args.plists and 'all' in args.plists:
         args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
 
+    # Handle fetch latest
     if args.fetch_latest:
         if 'all' in args.fetch_latest:
             args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
         else:
             args.plists = ['{choice}.plist'.format(choice=c) for _k, c in choices['latest'].items() if _k in args.fetch_latest]
+
+    # Handle comparisons
+    if args.compare:
+        args.compare = sorted(args.compare)  # Sort so oldest is first, newest is last
+        reg = re.compile(r'\d+.plist')
+        prefix_a = re.sub(reg, '', args.compare[0])
+        prefix_b = re.sub(reg, '', args.compare[1])
+
+        if prefix_a != prefix_b:
+            error(msg='--compare: cannot compare property lists for different applications', fatal=True, helper=helper, returncode=52)
+
+    # Handle style of comparison
+    if args.compare_style and not args.compare:
+        error(msg='--compare-style: not allowed without argument --compare', fatal=True, helper=helper, returncode=51)
 
     result = args
 

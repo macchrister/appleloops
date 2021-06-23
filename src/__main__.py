@@ -11,6 +11,9 @@ LOG = logging.getLogger(__name__)
 
 
 try:
+    if ARGS.compare:
+        process.compare_sources()
+
     # Empty vars
     deployment_dmg, sparseimage, mount_vol, device, packages = (None, None, None, None, set())
 

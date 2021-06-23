@@ -1,7 +1,4 @@
 import logging
-import sys
-
-from pathlib import PurePath
 
 from . import disk
 from . import ARGS
@@ -42,7 +39,7 @@ def generate(packages):
                                                          opt_pkgs=optional_pkgs,
                                                          space=space_msg)
     else:
-        if optional_dld_size > 0 and mandatory_download_size > 0:
+        if optional_dld_size > 0 and mandatory_dld_size > 0:
             discover_msg = 'and no optional packages to process.'
         elif optional_dld_size > 0:
             discover_msg = 'No optional packages to process.'

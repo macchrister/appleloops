@@ -22,8 +22,8 @@ def patch(packages, source):
     """Patch the set of packages with any updates"""
     result = set()
     sources = dict()
-    _packages = {_pkg: _attrs for _pkg, _attrs in packages.items() if (ARGS.mandatory and _attrs.get('IsMandatory', False)) or
-                                                                      (ARGS.optional and not _attrs.get('IsMandatory', False))}
+    _packages = {_pkg: _attrs for _pkg, _attrs in packages.items()
+                 if (ARGS.mandatory and _attrs.get('IsMandatory', False)) or (ARGS.optional and not _attrs.get('IsMandatory', False))}
 
     for app in PACKAGE_CHOICES:
         sources.update({_k: _v for _k, _v in PACKAGE_CHOICES[app].items()})
@@ -43,7 +43,7 @@ def patch(packages, source):
         if source not in [_v for _, _v in sources.items()]:
             LOG.info('{source} property list for patching is not a valid source.'.format(source=source))
             raise IndexError
- 
+
     # Read the patch info from the badwolf yaml and get the relevant source patches
     patches = read().get(source, dict())
 

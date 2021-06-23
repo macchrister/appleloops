@@ -86,7 +86,7 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
             raise TypeError
 
         # If the sparseimage exists and is already mounted
-        if  sparseimage.exists() and mountpoint.exists():
+        if sparseimage.exists() and mountpoint.exists():
             LOG.warning('Unmounting existing mount point for {mount}'.format(mount=mountpoint))
             eject(silent=True)
             result = mount(sparseimage, mountpoint)
@@ -98,8 +98,8 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
             if _p.returncode == 0:
                 LOG.warning('Created temporary sparseimage for {img}'.format(img=f))
                 _stdout = plist.read_string(_p.stdout)
-                _image_path = _stdout.get('image-components')[0]  # This may not always be the sparseimage filename?
                 _entities = _stdout.get('system-entities')
+                # _image_path = _stdout.get('image-components')[0]  # This may not always be the sparseimage filename?
 
                 if _entities:
                     result = mount_device(_entities)

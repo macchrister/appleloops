@@ -26,7 +26,6 @@ def logging_conf(silent=False, level='INFO'):
     stdout_filters = [logging.INFO]
     stderr_filters = [logging.DEBUG, logging.ERROR, logging.CRITICAL]
 
-
     if osinfo.isroot():
         log_path = Path('/var/log/appleloops.log')
     else:

@@ -202,3 +202,16 @@ mutually_exclusive:
       metavar: https://example.org/packages_path/
       required: false
       type: *id001
+hidden:
+  - args:
+    - --compare-style
+    kwargs:
+      dest: compare_style
+      help: diff comparison styles
+      metavar: <style>
+      choices:
+        - compare
+        - unified
+      required: false
+      default: compare
+      type: *id001

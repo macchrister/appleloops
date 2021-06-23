@@ -5,6 +5,7 @@ import sys
 from pathlib import Path, PurePath
 
 from . import curl
+from . import compare
 from . import disk
 from . import dmg
 from . import source
@@ -140,7 +141,7 @@ def download_install(packages):
     for pkg in packages:
         padded_counter = '{count:0{width}d}'.format(count=counter, width=len(str(total_pkgs)))
         download_msg_prefix = 'Download' if ARGS.dry_run else 'Downloading'
-        deploymt_msg_prefix = 'Install' if ARGS.dry_run else 'Installing'
+        deployment_msg_prefix = 'Install' if ARGS.dry_run else 'Installing'
 
         LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
                                                                                count=padded_counter,
@@ -156,7 +157,7 @@ def download_install(packages):
             f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
 
         # Do the deployment
-        if ARGS.deployment:
+        if ARGS.deployment and f.exists():
             if pkg.upgade:
                 deployment_msg_prefix = 'Upgrade' if ARGS.dry_run else 'Upgrading'
 
@@ -170,25 +171,31 @@ def download_install(packages):
 
             # Tidy up if this isn't a deployment DMG that's being used as source mirror
             if ARGS.pkg_server and not ARGS.pkg_server.endswith('.dmg'):
-                pkg.download_dest.unlink(missing_ok=True)
+                if installed:
+                    pkg.download_dest.unlink(missing_ok=True)
 
-                if not pkg.download_dest.exists():
-                    LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
+                    if not pkg.download_dest.exists():
+                        LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
 
         counter += 1
+
+
+def compare_sources():
+    """Compare's two property lists and prints a diff output."""
+    compare.sources(ARGS.compare[0], ARGS.compare[1])
 
 
 def convert_sparse(s, f=ARGS.build_dmg):
     """Convert the sparseimage into a DMG"""
     if not ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
-        converted_sparseimage = dmg.convert_sparse(s=sparseimage, f=ARGS.build_dmg)
+        converted_sparseimage = dmg.convert_sparse(s=s, f=ARGS.build_dmg)
 
         # Tidy up the temporary sparseimage
         if converted_sparseimage:
-            sparseimage.unlink(missing_ok=True)
+            s.unlink(missing_ok=True)
 
-            if not sparseimage.exists():
-                LOG.warning('Tidied up sparse image {image}'.format(image=str(sparseimage)))
+            if not s.exists():
+                LOG.warning('Tidied up sparse image {image}'.format(image=str(s)))
 
 
 def cleanup():

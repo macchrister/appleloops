@@ -1,7 +1,5 @@
 import logging
 
-from pprint import pprint
-
 from . import resource
 
 LOG = logging.getLogger(__name__)
