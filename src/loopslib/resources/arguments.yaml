@@ -210,7 +210,8 @@ hidden:
       help: diff comparison styles
       metavar: <style>
       choices:
-        - compare
+        - context
+        - html
         - unified
       required: false
       type: *id001
