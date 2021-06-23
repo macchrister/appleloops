@@ -213,5 +213,4 @@ hidden:
         - compare
         - unified
       required: false
-      default: compare
       type: *id001
