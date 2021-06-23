@@ -46,6 +46,11 @@ class LoopPackage:
         self.download_name = str(PurePath(self.download_name).name)  # Make the download name friendly
         self.sequence_number = self.parse_seq_number(self.download_name)
 
+        # Set installed/upgrade values if force is required
+        if ARGS.force:
+            self.installed = False
+            self.upgrade = True
+
         # Add self.package_id to INSTANCES tracker
         self.__class__.INSTANCES.add(self.package_id)
 
@@ -103,10 +108,8 @@ class LoopPackage:
 
         # Change the URL if package server is specified
         if ARGS.pkg_server:
-            if '.dmg' in ARGS.pkg_server:
-                url = url.replace(FEED_URL, DMG_MOUNT)
-            else:
-                url = url.replace(FEED_URL, ARGS.pkg_server)
+            if '.dmg' not in str(ARGS.pkg_server):
+                url = url.replace(FEED_URL, str(ARGS.pkg_server))
 
         # Only log the URL update if the url differs
         if url != _url:
@@ -124,6 +127,12 @@ class LoopPackage:
             dest = '{dest}/{pkgname}'.format(dest=ARGS.destination, pkgname=PurePath(u).name)
         else:
             dest = '{dest}/{pkgname}'.format(dest=ARGS.destination, pkgname=urlparse(u).path.lstrip('/'))
+
+        if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+            if ARGS.flat_mirror:
+                dest = dest.replace(str(ARGS.destination), DMG_MOUNT).replace('lp10_ms3_content_2016/', '').replace('lp10_ms3_content_2013/', '')
+            else:
+                dest = dest.replace(str(ARGS.destination), DMG_MOUNT)
 
         result = Path(self._regex_parse_string(dest))
 
