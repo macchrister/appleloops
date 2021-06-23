@@ -18,7 +18,7 @@ def read():
     return result
 
 
-def patch(packages, source):
+def patch(packages, source, comparing=False):
     """Patch the set of packages with any updates"""
     result = set()
     sources = dict()
@@ -74,18 +74,23 @@ def patch(packages, source):
                 LOG.warning('Skipped patching {pkg} in {source} as attributes are correct'.format(pkg=_pkg, source=source))
                 _new_attrs = None
 
-        if _badwolf_ignore:
-            LOG.debug('Ignoring package {pkg} per BadWolfIgnore in {source}'.format(pkg=_pkg, source=source))
-
-        # Avoid instancing something that already is instanced
-        if _pkg_id and _pkg_id not in package.LoopPackage.INSTANCES:
+        # If comparing sources, then the package needs to be added regardles.
+        if comparing:
             pkg = package.LoopPackage(**_attrs) if not _new_attrs else package.LoopPackage(**_new_attrs)
+            result.add(pkg)
+        else:
+            if _badwolf_ignore:
+                LOG.debug('Ignoring package {pkg} per BadWolfIgnore in {source}'.format(pkg=_pkg, source=source))
 
-            if not _badwolf_ignore:
-                result.add(pkg)
-                LOG.debug('{attrs}'.format(attrs=pkg.__dict__))
-        elif _pkg_id and _pkg_id in package.LoopPackage.INSTANCES:
-            LOG.debug('Already processed {pkgid} - skipping'.format(pkgid=_pkg_id))
+            # Avoid instancing something that already is instanced
+            if _pkg_id and _pkg_id not in package.LoopPackage.INSTANCES:
+                pkg = package.LoopPackage(**_attrs) if not _new_attrs else package.LoopPackage(**_new_attrs)
+
+                if not _badwolf_ignore:
+                    result.add(pkg)
+                    LOG.debug('{attrs}'.format(attrs=pkg.__dict__))
+            elif _pkg_id and _pkg_id in package.LoopPackage.INSTANCES:
+                LOG.debug('Already processed {pkgid} - skipping'.format(pkgid=_pkg_id))
 
         _msg = 'Processed ({count} of {total}) - {pkgid}'.format(pkgid=_pkg_id, count=_padded_count, total=total)
         counter += 1
