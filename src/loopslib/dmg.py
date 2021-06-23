@@ -56,23 +56,28 @@ def mount(f, mountpoint=DMG_MOUNT, read_only=False):
                 LOG.warning('Mounted {dmg} to {mountpoint}'.format(dmg=f, mountpoint=mountpoint))
         else:
             LOG.info(_p.stderr.decode('utf-8').strip())
+    else:
+        LOG.warning('Mount {dmg} to {mountpoint}'.format(dmg=f, mountpoint=mountpoint))
 
     return result
 
 
 def eject(mountpoint=DMG_MOUNT, silent=False):
     """Eject a mounted DMG"""
-    cmd = ['/usr/bin/hdiutil', 'eject', '-quiet', str(mountpoint)]
-    _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
-    LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+    if not ARGS.dry_run:
+        cmd = ['/usr/bin/hdiutil', 'eject', '-quiet', str(mountpoint)]
+        _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
+        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
 
-    if _p.returncode == 0:
-        if not silent:
-            LOG.info('Unmounted {mountpoint}'.format(mountpoint=mountpoint))
+        if _p.returncode == 0:
+            if not silent:
+                LOG.info('Unmounted {mountpoint}'.format(mountpoint=mountpoint))
 
-        LOG.debug(_p.stdout.strip())
+            LOG.debug(_p.stdout.strip())
+        else:
+            LOG.debug(_p.stderr.strip())
     else:
-        LOG.debug(_p.stderr.strip())
+        LOG.warning('Unmount {mountpoint}'.format(mountpoint=mountpoint))
 
 
 def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUNT):
@@ -107,6 +112,8 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
             else:
                 LOG.info(_p.stderr.decode('utf-8').strip())
                 sys.exit(88)
+    else:
+        LOG.warning('Create {sparseimage} ({volume}i, {fs}) and mount to {mountpoint}'.format(sparseimage=f, volume=vol, fs=fs, mountpoint=mountpoint))
 
     if result and sparseimage and sparseimage not in result:
         result = (sparseimage, result[0], result[1])
