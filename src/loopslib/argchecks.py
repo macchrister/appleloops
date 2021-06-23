@@ -121,7 +121,7 @@ def check(args, helper, choices):
         reg = re.compile(r'\d+.plist')
         prefix_a = re.sub(reg, '', args.compare[0])
         prefix_b = re.sub(reg, '', args.compare[1])
-        args.compare_style = 'compare' if not args.compare_style else args.compare_style  # Set a default if no compare style provided
+        args.compare_style = 'unified' if not args.compare_style else args.compare_style  # Sets default to a git diff like output
 
         if prefix_a != prefix_b:
             error(msg='--compare: cannot compare property lists for different applications', fatal=True, helper=helper, returncode=52)
