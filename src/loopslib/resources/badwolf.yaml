@@ -70,7 +70,7 @@ logicpro1050.plist:
   MAContent10_AssetPack_0796_DemosongLogicoceaneyes:
     FileCheck: /Library/Application Support/Logic/Logic Pro X Demosongs/ocean eyes.logicx/Alternatives/001/DisplayState.plist
 # ----- MainsStage ----- #
-mainstage323.plist:
+mainstage323.plist:  # Yes, all three versions of MainStage really do have the same PackageID typo of double 'MAContent10_' in the ID
   IRsSurroundPackage:
     PackageID: com.apple.pkg.MAContent10_IRsSurround
 mainstage324.plist:
