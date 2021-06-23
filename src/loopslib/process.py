@@ -33,7 +33,7 @@ def mount_pkgsrv_dmg():
     result = None
 
     # If deployment mode, mount any DMG that might be specified as the mirror source
-    if ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
+    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
         result = dmg.mount(f=ARGS.pkg_server, read_only=True)
 
     return result
@@ -105,7 +105,7 @@ def freespace_checks(packages):
     required_inst_space += sum([pkg.installed_size for pkg in packages])
     required_totl_space = sum([required_disk_space, required_inst_space])
 
-    if ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
+    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
         has_freespace = required_inst_space < disk.freespace(d=ARGS.install_target).bytes
         drive_dest = ARGS.install_target
     elif ARGS.deployment:
@@ -143,41 +143,62 @@ def download_install(packages):
         download_msg_prefix = 'Download' if ARGS.dry_run else 'Downloading'
         deployment_msg_prefix = 'Install' if ARGS.dry_run else 'Installing'
 
-        LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
-                                                                               count=padded_counter,
-                                                                               total=total_pkgs,
-                                                                               pkgname=pkg.download_name,
-                                                                               size=disk.convert(pkg.download_size)))
+        # Update the deployment message prefix for upgrade/force install scenarios
+        if pkg.upgrade:
+            deployment_msg_prefix = 'Upgrade' if ARGS.dry_run else 'Upgrading'
+
+        if ARGS.force:
+            deployment_msg_prefix = 'Reinstall' if ARGS.dry_run else 'Reinstalling'
+
+        # Don't need to log the download message if there is no download required
+        if not ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
+            LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
+                                                                                   count=padded_counter,
+                                                                                   total=total_pkgs,
+                                                                                   pkgname=pkg.download_name,
+                                                                                   size=disk.convert(pkg.download_size)))
 
         # Do the download
         if not ARGS.dry_run:
-            if ARGS.force:
+            # Don't unlink files on a deployment server/cache server
+            if ARGS.force and not ARGS.deployment and not (ARGS.pkg_server or ARGS.cache_server):
                 pkg.download_dest.unlink(missing_ok=True)
 
-            f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
+            # Don't download off a mounted DMG image
+            if not ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
+                f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
+            elif ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+                f = pkg.download_dest
 
         # Do the deployment
-        if ARGS.deployment and f.exists():
-            if pkg.upgade:
-                deployment_msg_prefix = 'Upgrade' if ARGS.dry_run else 'Upgrading'
+        if ARGS.deployment:
+            msg = '{inst_prefix} {count} of {total} - {pkgname}'.format(inst_prefix=deployment_msg_prefix,
+                                                                        count=padded_counter,
+                                                                        total=total_pkgs,
+                                                                        pkgname=pkg.download_name)
 
-            LOG.info('{inst_prefix} {count} of {total} - {pkgname}'.format(inst_prefix=deployment_msg_prefix,
-                                                                           count=padded_counter,
-                                                                           total=total_pkgs,
-                                                                           pkgname=pkg.download_name))
+            # If not dry run, safe to to do the install, else just log info
+            if not ARGS.dry_run:
+                if f.exists():
+                    LOG.info(msg)
 
-            # Install - success is logged by the object method.
-            installed = pkg.install()
+                    # Install - success is logged by the object method. Dry run is handled by the install method
+                    installed = pkg.install()
 
-            # Tidy up if this isn't a deployment DMG that's being used as source mirror
-            if ARGS.pkg_server and not ARGS.pkg_server.endswith('.dmg'):
-                if installed:
-                    pkg.download_dest.unlink(missing_ok=True)
+                    # Tidy up if this isn't a deployment DMG that's being used as source mirror
+                    if ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
+                        if installed:
+                            pkg.download_dest.unlink(missing_ok=True)
 
-                    if not pkg.download_dest.exists():
-                        LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
+                            if not pkg.download_dest.exists():
+                                LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
+            elif ARGS.dry_run:
+                LOG.info(msg)
 
         counter += 1
+
+    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+        dmg.eject()
 
 
 def compare_sources():
@@ -187,7 +208,7 @@ def compare_sources():
 
 def convert_sparse(s, f=ARGS.build_dmg):
     """Convert the sparseimage into a DMG"""
-    if not ARGS.deployment and ARGS.pkg_server and ARGS.pkg_server.endswith('.dmg'):
+    if ARGS.build_dmg:
         converted_sparseimage = dmg.convert_sparse(s=s, f=ARGS.build_dmg)
 
         # Tidy up the temporary sparseimage
