@@ -7,6 +7,18 @@ standard:
       help: dmg is created with APFS
       required: false
   - args:
+    - --compare-style
+    kwargs:
+      dest: compare_style
+      help: diff comparison styles. defaults to unified
+      metavar: <style>
+      choices:
+        - context
+        - html
+        - unified
+      required: false
+      type: &id001 !!python/name:builtins.str ''
+  - args:
     - -n
     - --dry-run
     kwargs:
@@ -52,7 +64,7 @@ standard:
       metavar: <target>
       required: false
       default: /
-      type: &id001 !!python/name:builtins.str ''
+      type: *id001
   - args:
     - -l
     - --log-level
@@ -200,18 +212,5 @@ mutually_exclusive:
       dest: pkg_server
       help: specify a local http/https mirror, or hosted dmg file
       metavar: https://example.org/packages_path/
-      required: false
-      type: *id001
-hidden:
-  - args:
-    - --compare-style
-    kwargs:
-      dest: compare_style
-      help: diff comparison styles
-      metavar: <style>
-      choices:
-        - context
-        - html
-        - unified
       required: false
       type: *id001
