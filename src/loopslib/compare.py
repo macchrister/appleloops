@@ -42,7 +42,7 @@ def sources(plist_a, plist_b, style=ARGS.compare_style):
                                                                        size=disk.convert(pkg.download_size)) for pkg in packages_b]
 
         if style == 'context':
-            diff = difflib.context_diff(packages_a_strings, packages_b_strings)
+            diff = difflib.context_diff(packages_a_strings, packages_b_strings, fromfile=plist_a, tofile=plist_b)
         elif style == 'unified':
             diff = difflib.unified_diff(packages_a_strings, packages_b_strings, fromfile=plist_a, tofile=plist_b)
         elif style == 'html':

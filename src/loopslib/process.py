@@ -3,6 +3,7 @@ import shutil
 import sys
 
 from pathlib import Path, PurePath
+from urllib.parse import urlparse
 
 from . import curl
 from . import compare
@@ -150,8 +151,8 @@ def download_install(packages):
         if ARGS.force:
             deployment_msg_prefix = 'Reinstall' if ARGS.dry_run else 'Reinstalling'
 
-        # Don't need to log the download message if there is no download required
-        if not ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
+        # Only log downloads if there is a URL scheme
+        if urlparse(pkg.url).scheme:
             LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
                                                                                    count=padded_counter,
                                                                                    total=total_pkgs,

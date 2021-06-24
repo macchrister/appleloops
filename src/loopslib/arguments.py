@@ -34,7 +34,6 @@ def create(choices):
     arguments = resource.read('arguments.yaml')
     standard_args = arguments['standard']
     mutually_excl = arguments['mutually_exclusive']
-    hidden = arguments['hidden']
     choices = arg_choices(choices=choices)
 
     # Process standard arguments that don't have more complex exclusivity
@@ -49,16 +48,6 @@ def create(choices):
         # Add version string to use in version output
         if '--version' in _args:
             _kwargs['version'] = VERSION_STRING
-
-        parser.add_argument(*_args, **_kwargs)
-
-    # Process standard arguments that don't have more complex exclusivity
-    for argset in hidden:
-        _args = argset['args']
-        _kwargs = argset['kwargs']
-
-        # Override help value to suppress it
-        _kwargs['help'] = argparse.SUPPRESS
 
         parser.add_argument(*_args, **_kwargs)
 
