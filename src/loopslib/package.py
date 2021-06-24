@@ -6,13 +6,20 @@ from pathlib import Path, PurePath
 from urllib.parse import urlparse
 
 from . import curl
-from . import versions
+from . import messages
 from . import pkgutil
+from . import versions
 from . import ARGS
 from . import DMG_MOUNT
 from . import FEED_URL
+from . import RUN_UUID
+
+messages.logging_conf(log_name='failedinstalls', silent=True, level='WARNING', log_file='appleloops_install_fails.log')
 
 LOG = logging.getLogger(__name__)
+FAILED = logging.getLogger('failedinstalls')
+FAILED.warning('Run UUID: {uuid}'.format(uuid=RUN_UUID))
+FAILED.warning(ARGS)
 
 
 class LoopPackage:
@@ -110,6 +117,9 @@ class LoopPackage:
         if ARGS.pkg_server:
             if '.dmg' not in str(ARGS.pkg_server):
                 url = url.replace(FEED_URL, str(ARGS.pkg_server))
+            elif '.dmg' in str(ARGS.pkg_server):
+                LOG.debug('Swapping packge URL to download name attribute for DMG based deployment')
+                url = n
 
         # Only log the URL update if the url differs
         if url != _url:
@@ -162,5 +172,11 @@ class LoopPackage:
                                                                                          pkg=self.package_id,
                                                                                          log=_lp))
                 LOG.debug(_p.stderr.strip())
+                FAILED.warning('{pkgname} - source: {pkgurl}'.format(pkgname=self.download_name,
+                                                                     pkgurl=self.url))
+                FAILED.warning('{pkgname} - dest: {pkgdest}'.format(pkgname=self.download_name,
+                                                                    pkgdest=self.download_dest))
+                FAILED.warning('{pkgname} - {installerror}'.format(pkgname=self.download_name,
+                                                                   installerror=_p.stderr.strip()))
 
         return result

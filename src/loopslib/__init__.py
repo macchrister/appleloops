@@ -2,13 +2,13 @@ import logging; logging.getLogger(__name__).addHandler(logging.NullHandler())  #
 import sys
 import tempfile
 
-from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 from . import osinfo
 
 if not osinfo.python_compatible():
-    LOG.info('Python 3.9.5 is required.')
+    print('Python 3.9.5 is required.')
     sys.exit(1)
 
 from . import messages
@@ -17,7 +17,7 @@ from . import configuration
 silent = any([_arg in ['--silent', '-s'] for _arg in sys.argv])
 log_level = 'DEBUG' if any([_arg.lower() == 'debug' for _arg in sys.argv]) else 'INFO'
 
-LOGR = messages.logging_conf(silent=silent, level=log_level)
+messages.logging_conf(log_name=__name__, silent=silent, level=log_level)
 CONF = configuration.load()
 LOG = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ DMG_MOUNT = CONF['DMG']['mountpoint']
 DMG_VOLUME_NAME = CONF['DMG']['volume_name']
 VALID_DMG_FS = CONF['DMG']['valid_fs']
 DMG_DEFAULT_FS = CONF['DMG']['default_fs']
+RUN_UUID = str(uuid4()).upper()
 
 
 # Have to do other non-core module loading here to avoid circular imports
@@ -47,6 +48,11 @@ from . import arguments  # NOQA
 
 ARGS = arguments.create(choices=PACKAGE_CHOICES)
 DMG_DEFAULT_FS = ARGS.apfs_dmg if ARGS.apfs_dmg else DMG_DEFAULT_FS
+
+if not ARGS.silent:
+    LOG.info('Run UUID: {uuid}'.format(uuid=RUN_UUID))
+else:
+    LOG.warning('Run UUID: {uuid}'.format(uuid=RUN_UUID))
 
 LOG.debug('{args}'.format(args=' '.join(sys.argv)))
 LOG.debug('{versionstr}'.format(versionstr=VERSION_STRING))

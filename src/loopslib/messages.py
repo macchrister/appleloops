@@ -21,21 +21,23 @@ def add_stream(stream, filters, log):
     log.addHandler(handler)
 
 
-def logging_conf(silent=False, level='INFO'):
-    """Configures logging for the utility."""
+def logging_conf(log_name, silent=False, level='INFO', log_file='appleloops.log'):
+    """Configures overall logging."""
     stdout_filters = [logging.INFO]
     stderr_filters = [logging.DEBUG, logging.ERROR, logging.CRITICAL]
 
     if osinfo.isroot():
-        log_path = Path('/var/log/appleloops.log')
+        base_path = Path('/var/log/')
     else:
-        log_path = Path('~/Library/Application Support/com.github.carlashley/appleloops/logs/appleloops.log').expanduser()
+        base_path = Path('~/Library/Application Support/com.github.carlashley/appleloops/logs/').expanduser()
+
+    log_path = base_path / log_file
 
     if not log_path.exists():
         _parent = Path(PurePath(log_path).parent)
         _parent.mkdir(parents=True, exist_ok=True)
 
-    log = logging.getLogger()
+    log = logging.getLogger(log_name)
     log.setLevel(level.upper())
     file_handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=(1048576 * 10), backupCount=7)
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s.%(funcName)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -52,4 +54,4 @@ def logging_conf(silent=False, level='INFO'):
     if Path(log_path).exists():
         file_handler.doRollover()
 
-    return logging.getLogger(__name__)
+    # return logging.getLogger(__name__)
