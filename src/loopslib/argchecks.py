@@ -2,7 +2,7 @@ import logging
 import re
 import sys
 
-from pathlib import Path, PurePath
+from pathlib import Path
 from urllib.parse import urlparse
 
 from . import curl
@@ -10,6 +10,7 @@ from . import osinfo
 from . import DMG_MOUNT
 from . import HTTP_OK
 from . import HTTP_MIRROR_TEST_PATHS
+from . import PKG_SERVER_IS_DMG
 
 LOG = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ def check(args, helper, choices):
             error(msg='--pkg-server: HTTP/HTTPS scheme required', fatal=True, helper=helper, returncode=56)
 
         # If the pkg server is not a DMG
-        if not PurePath(args.pkg_server).suffix == '.dmg':
+        if not PKG_SERVER_IS_DMG == '.dmg':
             # Test the mirror has either of the expected mirroring folders per Apple servers
             if not any([curl.status('{mirror}/{testpath}'.format(mirror=args.pkg_server, testpath=_p)) in HTTP_OK
                         for _p in HTTP_MIRROR_TEST_PATHS]):
@@ -77,7 +78,7 @@ def check(args, helper, choices):
                 _msg = ('--pkg-server: mirrored content cannot be found, please ensure packages exist in '
                         '{testpaths}'.format(testpaths=', and/or '.join(_test_paths)))
                 error(msg=_msg, fatal=True, helper=helper, returncode=55)
-        elif PurePath(args.pkg_server).suffix == '.dmg':
+        elif PKG_SERVER_IS_DMG == '.dmg':
             # Test if the supplied DMG path exists
             if not url.scheme:
                 args.pkg_server = Path(args.pkg_server)

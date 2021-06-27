@@ -48,6 +48,7 @@ from . import arguments  # NOQA
 
 ARGS = arguments.create(choices=PACKAGE_CHOICES)
 DMG_DEFAULT_FS = ARGS.apfs_dmg if ARGS.apfs_dmg else DMG_DEFAULT_FS
+PKG_SERVER_IS_DMG = True if ARGS.pkgserver and str(ARGS.pkgserver).endswith('.dmg') else False
 
 if not ARGS.silent:
     LOG.info('Run UUID: {uuid}'.format(uuid=RUN_UUID))

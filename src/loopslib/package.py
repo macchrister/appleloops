@@ -12,6 +12,7 @@ from . import versions
 from . import ARGS
 from . import DMG_MOUNT
 from . import FEED_URL
+from . import PKG_SERVER_IS_DMG
 from . import RUN_UUID
 
 messages.logging_conf(log_name='failedinstalls', silent=True, level='WARNING', log_file='appleloops_install_fails.log')
@@ -138,7 +139,7 @@ class LoopPackage:
         else:
             dest = '{dest}/{pkgname}'.format(dest=ARGS.destination, pkgname=urlparse(u).path.lstrip('/'))
 
-        if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+        if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG:
             if ARGS.flat_mirror:
                 dest = dest.replace(str(ARGS.destination), DMG_MOUNT).replace('lp10_ms3_content_2016/', '').replace('lp10_ms3_content_2013/', '')
             else:

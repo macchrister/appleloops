@@ -13,6 +13,7 @@ from . import source
 from . import ARGS
 from . import DMG_DEFAULT_FS
 from . import DMG_MOUNT
+from . import PKG_SERVER_IS_DMG
 from . import TEMPDIR
 
 LOG = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def mount_pkgsrv_dmg():
     result = None
 
     # If deployment mode, mount any DMG that might be specified as the mirror source
-    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+    if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG:
         result = dmg.mount(f=ARGS.pkg_server, read_only=True)
 
     return result
@@ -106,7 +107,7 @@ def freespace_checks(packages):
     required_inst_space += sum([pkg.installed_size for pkg in packages])
     required_totl_space = sum([required_disk_space, required_inst_space])
 
-    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+    if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG:
         has_freespace = required_inst_space < disk.freespace(d=ARGS.install_target).bytes
         drive_dest = ARGS.install_target
     elif ARGS.deployment:
@@ -143,6 +144,7 @@ def download_install(packages):
         padded_counter = '{count:0{width}d}'.format(count=counter, width=len(str(total_pkgs)))
         download_msg_prefix = 'Download' if ARGS.dry_run else 'Downloading'
         deployment_msg_prefix = 'Install' if ARGS.dry_run else 'Installing'
+        urlscheme = urlparse(pkg.url).scheme
 
         # Update the deployment message prefix for upgrade/force install scenarios
         if pkg.upgrade:
@@ -152,7 +154,7 @@ def download_install(packages):
             deployment_msg_prefix = 'Reinstall' if ARGS.dry_run else 'Reinstalling'
 
         # Only log downloads if there is a URL scheme
-        if urlparse(pkg.url).scheme:
+        if urlscheme:
             LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
                                                                                    count=padded_counter,
                                                                                    total=total_pkgs,
@@ -166,10 +168,10 @@ def download_install(packages):
                 pkg.download_dest.unlink(missing_ok=True)
 
             # Don't download off a mounted DMG image
-            if not ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
-                f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
-            elif ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+            if ARGS.pkg_server and PKG_SERVER_IS_DMG:
                 f = pkg.download_dest
+            if urlscheme:
+                f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
 
         # Do the deployment
         if ARGS.deployment:
@@ -187,7 +189,7 @@ def download_install(packages):
                     installed = pkg.install()
 
                     # Tidy up if this isn't a deployment DMG that's being used as source mirror
-                    if ARGS.pkg_server and not PurePath(ARGS.pkg_server).suffix == '.dmg':
+                    if ARGS.pkg_server and not PKG_SERVER_IS_DMG:
                         if installed:
                             pkg.download_dest.unlink(missing_ok=True)
 
@@ -198,7 +200,7 @@ def download_install(packages):
 
         counter += 1
 
-    if ARGS.deployment and ARGS.pkg_server and PurePath(ARGS.pkg_server).suffix == '.dmg':
+    if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG == '.dmg':
         dmg.eject()
 
 
