@@ -17,23 +17,25 @@ try:
     # Empty vars
     deployment_dmg, sparseimage, mount_vol, device, packages = (None, None, None, None, set())
 
+    # Mount the DMG early if in deployment mode to ensure paths exist when processing packages
+    if ARGS.deployment:
+        # Mount a DMG if a DMG has been specified as a the package mirror source
+        deployment_dmg = process.mount_pkgsrv_dmg()
+
+    # Creates a sparse image if building a DMG
+    if not ARGS.deployment and ARGS.build_dmg:
+        sparseimage, mount_vol, device = process.init_dmg()
+
     # Set up app object instances and packages set.
     garageband, logicpro, mainstage, packages = process.apps_plists()
 
     # If packages exist, process them.
     if packages:
-        # Do freespace checks, exits if not enough space.
-        has_freespace, drive_dest = process.freespace_checks(packages)
-
-        # Creates a sparse image if building a DMG
-        if not ARGS.deployment:
-            sparseimage, mount_vol, device = process.init_dmg()
-        elif ARGS.deployment:
-            # Mount a DMG if a DMG has been specified as a the package mirror source
-            deployment_dmg = process.mount_pkgsrv_dmg()
-
         # Generate statistics
         stats.generate(packages)
+
+        # Do freespace checks, exits if not enough space.
+        has_freespace, drive_dest = process.freespace_checks(packages)
 
         # Download or install
         process.download_install(packages)
