@@ -57,15 +57,6 @@ standard:
       help: ignore invalid certificates when downloading
       required: false
   - args:
-    - --target
-    kwargs:
-      dest: install_target
-      help: installs packages to the specified target
-      metavar: <target>
-      required: false
-      default: /
-      type: *id001
-  - args:
     - -l
     - --log-level
     kwargs:
@@ -123,6 +114,13 @@ standard:
     - --version
     kwargs:
       action: version
+  - args:
+    - --summary-only
+    kwargs:
+      action: store_true
+      dest: summary_only
+      help: only prints summary info, skipping download/install messages
+      required: false
 mutually_exclusive:
   deployment:
     - args:
