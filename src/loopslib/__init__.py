@@ -11,8 +11,19 @@ if not osinfo.python_compatible():
     print('Python 3.9.5 is required.')
     sys.exit(1)
 
-from . import messages
-from . import configuration
+_dupe_argv = {_arg: 0 for _arg in sys.argv if _arg.startswith('-') or _arg.startswith('--')}
+
+if len(sys.argv) > 1:
+    for arg in sys.argv:
+        if arg.startswith('-') or arg.startswith('--'):
+            _dupe_argv[arg] += 1
+
+if any([_dupe_argv[arg] > 1 for arg, _ in _dupe_argv.items()]):
+    print('Duplicate arguments detected.')
+    sys.exit(1)
+
+from . import messages  # NOQA
+from . import configuration  # NOQA
 
 silent = any([_arg in ['--silent', '-s'] for _arg in sys.argv])
 log_level = 'DEBUG' if any([_arg.lower() == 'debug' for _arg in sys.argv]) else 'INFO'
@@ -41,6 +52,8 @@ DMG_VOLUME_NAME = CONF['DMG']['volume_name']
 VALID_DMG_FS = CONF['DMG']['valid_fs']
 DMG_DEFAULT_FS = CONF['DMG']['default_fs']
 RUN_UUID = str(uuid4()).upper()
+INSTALL_TARGET = Path(CONF['INSTALL']['target'])
+FAIL_LOG = 'appleloops_failed_installs.log'
 
 
 # Have to do other non-core module loading here to avoid circular imports
@@ -48,7 +61,6 @@ from . import arguments  # NOQA
 
 ARGS = arguments.create(choices=PACKAGE_CHOICES)
 DMG_DEFAULT_FS = ARGS.apfs_dmg if ARGS.apfs_dmg else DMG_DEFAULT_FS
-PKG_SERVER_IS_DMG = True if ARGS.pkgserver and str(ARGS.pkgserver).endswith('.dmg') else False
 
 if not ARGS.silent:
     LOG.info('Run UUID: {uuid}'.format(uuid=RUN_UUID))
