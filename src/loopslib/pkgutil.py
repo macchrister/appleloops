@@ -53,4 +53,10 @@ def is_installed(files, lcl_ver, pkg_ver):
 
 def upgrade_pkg(lcl_ver, pkg_ver):
     """Determine if package should be upgrade, returns boolean."""
-    return versions.convert(lcl_ver) < versions.convert(pkg_ver)
+    result = False
+
+    # If local version is '0.0.0' this is most likely because it isn't installed
+    if lcl_ver != '0.0.0':
+        result = versions.convert(lcl_ver) < versions.convert(pkg_ver)
+
+    return result
