@@ -2,7 +2,8 @@ import logging
 import shutil
 import sys
 
-from pathlib import Path, PurePath
+from pathlib import Path
+from time import sleep
 from urllib.parse import urlparse
 
 from . import curl
@@ -13,10 +14,12 @@ from . import source
 from . import ARGS
 from . import DMG_DEFAULT_FS
 from . import DMG_MOUNT
-from . import PKG_SERVER_IS_DMG
+from . import FAIL_LOG
+from . import INSTALL_TARGET
 from . import TEMPDIR
 
 LOG = logging.getLogger(__name__)
+PKG_SERVER_IS_DMG = True if ARGS.pkg_server and str(ARGS.pkg_server).endswith('.dmg') else False
 
 
 def init_dmg():
@@ -36,7 +39,9 @@ def mount_pkgsrv_dmg():
 
     # If deployment mode, mount any DMG that might be specified as the mirror source
     if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG:
-        result = dmg.mount(f=ARGS.pkg_server, read_only=True)
+        # Always need to mount DMG's for dry runs
+        result = dmg.mount(f=ARGS.pkg_server, read_only=True, dry_run=False)
+        LOG.info('Mounted {dmg} to {dmg_mount}'.format(dmg=ARGS.pkg_server, dmg_mount=result[0]))
 
     return result
 
@@ -82,7 +87,7 @@ def apps_plists():
     # If deploying packages, only return those that are being upgraded/installed (or forced install)
     if _packages:
         if ARGS.deployment:
-            packages = [pkg for pkg in _packages if pkg.upgrade or not pkg.installed or ARGS.force]
+            packages = [pkg for pkg in _packages if pkg.upgrade or not pkg.installed]
         else:
             packages = [pkg for pkg in _packages]
 
@@ -106,38 +111,53 @@ def freespace_checks(packages):
     required_disk_space += sum([pkg.download_size for pkg in packages])
     required_inst_space += sum([pkg.installed_size for pkg in packages])
     required_totl_space = sum([required_disk_space, required_inst_space])
+    available_space = 0
 
-    if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG:
-        has_freespace = required_inst_space < disk.freespace(d=ARGS.install_target).bytes
-        drive_dest = ARGS.install_target
-    elif ARGS.deployment:
-        has_freespace = required_totl_space < disk.freespace(d=ARGS.install_target).bytes
-        drive_dest = ARGS.install_target
-    elif not ARGS.deployment:
-        # Test free space in location where DMG is stored if building DMG else
-        # test the download destination.
-        if ARGS.build_dmg:
-            has_freespace = required_disk_space < disk.freespace(d=ARGS.build_dmg).bytes
-            drive_dest = str(PurePath(ARGS.build_dmg).parent)
-        else:
-            has_freespace = required_disk_space < disk.freespace(d=ARGS.destination).bytes
-            drive_dest = ARGS.build_dmg
+    # Set the correct destination to test disk space availability
+    if ARGS.deployment:
+        drive_dest = INSTALL_TARGET
+    else:
+        drive_dest = ARGS.destination
+
+    available_space = disk.freespace(d=drive_dest)
+
+    # Test the against the correct space requirement depending on deployment/download mode
+    if ARGS.deployment and PKG_SERVER_IS_DMG:
+        required_totl_space = required_inst_space
+        has_freespace = required_totl_space < available_space.bytes
+    else:
+        required_totl_space = required_disk_space
+        has_freespace = required_totl_space < available_space.bytes
 
     result = (has_freespace, drive_dest)
 
     if not has_freespace:
-        LOG.info('Insufficient space on {dest}'.format(dest=drive_dest))
-        sys.exit(33)
+        if ARGS.dry_run:
+            msg = '{dest} has insufficient space for non dry-run. {req} will be required, {avail} is available'.format(dest=drive_dest,
+                                                                                                                       req=disk.convert(required_totl_space),
+                                                                                                                       avail=available_space.hr)
+        else:
+            msg = '{dest} has insufficient space to complete. {req} is required, {avail} is available.'.format(dest=drive_dest,
+                                                                                                               req=disk.convert(required_totl_space),
+                                                                                                               avail=available_space.hr)
+        LOG.info(msg)
+
+        if not ARGS.dry_run:
+            sys.exit(33)
     else:
-        LOG.warning('Freespace checks passed.')
+        msg = '{dest} has sufficient space to complete. {req} is required, {avail} is available'.format(dest=drive_dest,
+                                                                                                        req=disk.convert(required_totl_space),
+                                                                                                        avail=available_space.hr)
+        LOG.warning(msg)
 
     return result
 
 
 def download_install(packages):
-    """Downloads or installs packages depending on arguments."""
+    """Downloads or installs packages depending on arguments"""
     # Number of packages and incrementing counter
     total_pkgs, counter = (len(packages), 1)
+    failed = 0
 
     # Iterate
     for pkg in packages:
@@ -155,11 +175,16 @@ def download_install(packages):
 
         # Only log downloads if there is a URL scheme
         if urlscheme:
-            LOG.info('{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
-                                                                                   count=padded_counter,
-                                                                                   total=total_pkgs,
-                                                                                   pkgname=pkg.download_name,
-                                                                                   size=disk.convert(pkg.download_size)))
+            download_msg = '{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
+                                                                                         count=padded_counter,
+                                                                                         total=total_pkgs,
+                                                                                         pkgname=pkg.download_name,
+                                                                                         size=disk.convert(pkg.download_size))
+
+            if not ARGS.summary_only:
+                LOG.info(download_msg)
+            elif ARGS.summary_only:
+                LOG.warning(download_msg)
 
         # Do the download
         if not ARGS.dry_run:
@@ -183,25 +208,48 @@ def download_install(packages):
             # If not dry run, safe to to do the install, else just log info
             if not ARGS.dry_run:
                 if f.exists():
-                    LOG.info(msg)
+                    if not ARGS.summary_only:
+                        LOG.info(msg)
+                    elif ARGS.summary_only:
+                        LOG.warning(msg)
 
                     # Install - success is logged by the object method. Dry run is handled by the install method
+                    # NOTE: This is a tuple, installed[0] = process return code, installed[1] = process output
                     installed = pkg.install()
+
+                    # Increment the failed counter so we know to output fail log path location.
+                    if installed[0] != 0:
+                        failed += 1
 
                     # Tidy up if this isn't a deployment DMG that's being used as source mirror
                     if ARGS.pkg_server and not PKG_SERVER_IS_DMG:
-                        if installed:
-                            pkg.download_dest.unlink(missing_ok=True)
+                        pkg.download_dest.unlink(missing_ok=True)
 
-                            if not pkg.download_dest.exists():
-                                LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
+                        if not pkg.download_dest.exists():
+                            LOG.warning('Tidied up {pkgname}'.format(pkgname=pkg.download_name))
+
+                if ARGS.sleep:
+                    sleep(int(ARGS.sleep))
             elif ARGS.dry_run:
-                LOG.info(msg)
+                if not ARGS.summary_only:
+                    LOG.info(msg)
+                elif ARGS.summary_only:
+                    LOG.warning(msg)
 
         counter += 1
 
-    if ARGS.deployment and ARGS.pkg_server and PKG_SERVER_IS_DMG == '.dmg':
-        dmg.eject()
+    # Send error message about failed installs and delete error log if no failed installs
+    if not ARGS.dry_run:
+        fail_log = Path('/var/log/{log}'.format(log=FAIL_LOG))
+
+        if failed > 0:
+            fail_msg = '{count} package failed to install, information can be found in \'/var/log/{log}\''.format(count=failed, log=FAIL_LOG)
+
+            if failed > 1:
+                fail_msg = fail_msg.replace('package', 'packages')
+        else:
+            if fail_log.exists():
+                fail_log.unlink(missing_ok=True)
 
 
 def compare_sources():
@@ -230,5 +278,14 @@ def cleanup():
         if not TEMPDIR.exists():
             LOG.warning('Tidied up temporary working directory.')
 
+    # Don't need to eject if this isn't a DMG deployment scenario
     if Path(DMG_MOUNT).exists():
-        dmg.eject()
+        dmg.eject(dry_run=False if ARGS.deployment and PKG_SERVER_IS_DMG else ARGS.dry_run)
+
+    if ARGS.deployment:
+        tmp_download = Path('/tmp/appleloops')
+        if tmp_download.exists():
+            shutil.rmtree(str(tmp_download), ignore_errors=True)
+
+            if not tmp_download.exists():
+                LOG.warning('Tidied up temporary download/install directory.')
