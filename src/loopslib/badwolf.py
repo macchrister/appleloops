@@ -49,7 +49,7 @@ def patch(packages, source, comparing=False):
 
     # Total packages (total) and counter (counter)
     total, counter = len([_p for _p in _packages]), 1
-    LOG.info('Processing {total} packages from {source}'.format(total=total, source=source))
+    LOG.info('Processing {source}'.format(source=source))
 
     # Iterate and patch
     for _pkg, _attrs in _packages.items():
