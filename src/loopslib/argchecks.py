@@ -7,10 +7,8 @@ from urllib.parse import urlparse
 
 from . import curl
 from . import osinfo
-from . import DMG_MOUNT
 from . import HTTP_OK
 from . import HTTP_MIRROR_TEST_PATHS
-from . import PKG_SERVER_IS_DMG
 
 LOG = logging.getLogger(__name__)
 
@@ -27,11 +25,17 @@ def error(msg, helper, fatal=False, returncode=1):
 
 def check(args, helper, choices):
     """Check arguments for specific conditions"""
+    PKG_SERVER_IS_DMG = True if args.pkg_server and str(args.pkg_server).endswith('.dmg') else False
+
     # Deployment - must be root
     if args.deployment:
         if not osinfo.isroot() and not args.dry_run:
             LOG.error('You must be root to run in deployment mode.')
             sys.exit(66)
+
+        # If no apps are specified, then default to all of them and process.
+        if not args.apps:
+            args.apps = [c for c in choices['supported'] if c != 'all']
 
     # Must provide 'mandatory' or 'optional' package set
     if not (args.mandatory or args.optional):
@@ -54,6 +58,8 @@ def check(args, helper, choices):
 
     # Specific package mirror options
     if args.pkg_server:
+        http_ok = [s for s in HTTP_OK]
+        http_ok.append(403)
         http_schemes = ['http', 'https']
         args.pkg_server = args.pkg_server.rstrip('/')
         url = urlparse(args.pkg_server)
@@ -69,26 +75,29 @@ def check(args, helper, choices):
             error(msg='--pkg-server: HTTP/HTTPS scheme required', fatal=True, helper=helper, returncode=56)
 
         # If the pkg server is not a DMG
-        if not PKG_SERVER_IS_DMG == '.dmg':
+        if not PKG_SERVER_IS_DMG:
             # Test the mirror has either of the expected mirroring folders per Apple servers
-            if not any([curl.status('{mirror}/{testpath}'.format(mirror=args.pkg_server, testpath=_p)) in HTTP_OK
+            if not any([curl.status('{mirror}/{testpath}'.format(mirror=args.pkg_server, testpath=_p)) in http_ok
                         for _p in HTTP_MIRROR_TEST_PATHS]):
 
                 _test_paths = ["'{pkgsrv}/{p}'".format(pkgsrv=args.pkg_server, p=_p) for _p in HTTP_MIRROR_TEST_PATHS]
-                _msg = ('--pkg-server: mirrored content cannot be found, please ensure packages exist in '
+                _msg = ('--pkg-server: mirrored folder structure cannot be found, please ensure packages exist in '
                         '{testpaths}'.format(testpaths=', and/or '.join(_test_paths)))
                 error(msg=_msg, fatal=True, helper=helper, returncode=55)
-        elif PKG_SERVER_IS_DMG == '.dmg':
+        elif PKG_SERVER_IS_DMG:
             # Test if the supplied DMG path exists
             if not url.scheme:
                 args.pkg_server = Path(args.pkg_server)
 
                 if not args.pkg_server.exists():
-                    error(msg='--pkg-server: file path does not exist', fatal=True, helper=helper, returncode=54)
+                    error(msg='--pkg-server: path does not exist', fatal=True, helper=helper, returncode=54)
+            elif url.scheme:
+                if curl.status(args.pkg_server) not in http_ok:
+                    error(msg='--pkg-server: path does not exist', fatal=True, helper=helper, returncode=54)
 
         # Reachability check for http/https
         if status:
-            if status and status not in HTTP_OK:
+            if status and status not in http_ok:
                 error(msg='--pkg-server: HTTP {status} for specified URL'.format(status=status), fatal=True,
                       helper=helper, returncode=53)
 
@@ -99,7 +108,6 @@ def check(args, helper, choices):
     # Build DMG - also set the destination to be the DMG
     if args.build_dmg:
         args.build_dmg = Path(args.build_dmg)
-        args.destination = DMG_MOUNT
 
     # Handle all apps
     if args.apps and 'all' in args.apps:
