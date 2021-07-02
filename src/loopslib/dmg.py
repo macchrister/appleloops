@@ -35,7 +35,7 @@ def mount_device(entities):
     return result
 
 
-def mount(f, mountpoint=DMG_MOUNT, read_only=False):
+def mount(f, mountpoint=DMG_MOUNT, read_only=False, dry_run=ARGS.dry_run):
     """Mount a DMG, returns the mount path if successful"""
     result = None
     cmd = ['/usr/bin/hdiutil', 'attach', '-mountpoint', str(mountpoint), '-plist', f]
@@ -44,9 +44,9 @@ def mount(f, mountpoint=DMG_MOUNT, read_only=False):
     if read_only:
         cmd.insert(2, '-readonly')
 
-    if not ARGS.dry_run:
+    if not dry_run:
         _p = subprocess.run(cmd, capture_output=True)
-        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join([str(x) for x in cmd]), returncode=_p.returncode))
 
         if _p.returncode == 0:
             _entities = plist.read_string(_p.stdout).get('system-entities')
@@ -62,31 +62,37 @@ def mount(f, mountpoint=DMG_MOUNT, read_only=False):
     return result
 
 
-def eject(mountpoint=DMG_MOUNT, silent=False):
+def eject(mountpoint=DMG_MOUNT, silent=False, dry_run=ARGS.dry_run):
     """Eject a mounted DMG"""
-    if not ARGS.dry_run:
-        cmd = ['/usr/bin/hdiutil', 'eject', '-quiet', str(mountpoint)]
+    if not isinstance(mountpoint, Path):
+        mountpoint = Path(mountpoint)
+
+    cmd = ['/usr/bin/hdiutil', 'eject', str(mountpoint)]
+
+    if not dry_run and not mountpoint.exists():
+        LOG.warning('Cannot unmount {mountpoint} - it does not exist'.format(mountpoint=mountpoint))
+    elif not dry_run and mountpoint.exists():
         _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
-        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join([str(x) for x in cmd]), returncode=_p.returncode))
 
         if _p.returncode == 0:
             if not silent:
                 LOG.info('Unmounted {mountpoint}'.format(mountpoint=mountpoint))
-
-            LOG.debug(_p.stdout.strip())
         else:
-            LOG.debug(_p.stderr.strip())
-    else:
+            LOG.debug('Error: '. _p.stderr.strip() if _p.stderr else _p.stdout.strip())
+    elif ARGS.dry_run and not dry_run:
         LOG.warning('Unmount {mountpoint}'.format(mountpoint=mountpoint))
 
 
-def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUNT):
+def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUNT, dry_run=ARGS.dry_run):
     """Create a thin sparse image, returns the mount point if successfully created"""
     result = None
     sparseimage = Path('{f}.sparseimage'.format(f=f)) if not str(f).endswith('.sparseimage') else Path(f)
-    mountpoint = Path(mountpoint)
 
-    if not ARGS.dry_run:
+    if not isinstance(mountpoint, Path):
+        mountpoint = Path(mountpoint)
+
+    if not dry_run:
         if fs not in VALID_DMG_FS:
             raise TypeError
 
@@ -98,7 +104,7 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
         else:
             cmd = ['/usr/bin/hdiutil', 'create', '-ov', '-plist', '-volname', vol, '-fs', fs, '-attach', '-type', 'SPARSE', str(f)]
             _p = subprocess.run(cmd, capture_output=True)
-            LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+            LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join([str(x) for x in cmd]), returncode=_p.returncode))
 
             if _p.returncode == 0:
                 LOG.warning('Created temporary sparseimage for {img}'.format(img=f))
@@ -121,17 +127,17 @@ def create_sparse(f, vol=DMG_VOLUME_NAME, fs=DMG_DEFAULT_FS, mountpoint=DMG_MOUN
     return result
 
 
-def convert_sparse(s, f):
+def convert_sparse(s, f, dry_run=ARGS.dry_run):
     """Converts a sparse image to DMG, returns the DMG path if successful"""
     result = None
     cmd = ['/usr/bin/hdiutil', 'convert', '-ov', '-quiet', str(s), '-format', 'UDZO', '-o', str(f)]
 
-    if not ARGS.dry_run:
+    if not dry_run:
         LOG.info('Converting {sparseimage}'.format(sparseimage=s))
         # Eject first
         eject(silent=True)
         _p = subprocess.run(cmd, capture_output=True, encoding='utf-8')
-        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join(cmd), returncode=_p.returncode))
+        LOG.debug('{cmd} ({returncode})'.format(cmd=' '.join([str(x) for x in cmd]), returncode=_p.returncode))
 
         if _p.returncode == 0:
             LOG.info('Created {dmg}'.format(dmg=f))
