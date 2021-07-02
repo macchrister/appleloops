@@ -64,3 +64,6 @@ DMG:
     - APFS
     - HFS+
     - HFS+J
+
+INSTALL:
+  target: /
