@@ -39,19 +39,26 @@ def logging_conf(log_name, silent=False, level='INFO', log_file='appleloops.log'
 
     log = logging.getLogger(log_name)
     log.setLevel(level.upper())
-    file_handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=(1048576 * 10), backupCount=7)
     formatter = logging.Formatter(fmt='%(asctime)s - %(name)s.%(funcName)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    if log_name != 'failedinstalls':
+        if not Path(log_path).exists():
+            file_handler = logging.handlers.RotatingFileHandler(log_path, backupCount=7)
+        else:
+            file_handler = logging.handlers.RotatingFileHandler(log_path, backupCount=7)
+            file_handler.doRollover()
+    elif log_name == 'failedinstalls':
+        # Ensure the failed install log is overwritten
+        file_handler = logging.handlers.RotatingFileHandler(log_path, mode='w', backupCount=0)
+
     file_handler.setFormatter(formatter)
     log.addHandler(file_handler)
 
-    # Handle printing INFO/WARNING to stdout and DEBUG/ERROR/CRITICAL to stderr
-    # NOTE: DEBUG/ERROR/CRITICAL will always print out even if '-s/--silent' specified.
+    # Handle printing INFO/WARNING to stdout and ERROR to stderr
+    # Only ERROR prints out to stderr, DEBUG goes to log
     add_stream(stderr, stderr_filters, log)
 
     if not silent:
         add_stream(stdout, stdout_filters, log)
 
-    if Path(log_path).exists():
-        file_handler.doRollover()
-
-    # return logging.getLogger(__name__)
+    return logging.getLogger(log_name)
