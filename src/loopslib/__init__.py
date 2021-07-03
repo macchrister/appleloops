@@ -54,7 +54,8 @@ DMG_DEFAULT_FS = CONF['DMG']['default_fs']
 RUN_UUID = str(uuid4()).upper()
 INSTALL_TARGET = Path(CONF['INSTALL']['target'])
 FAIL_LOG = 'appleloops_failed_installs.log'
-
+SYSTEM_UPDATER = Path('/{pref}'.format(pref=CONF['UPDATER']['pref']))
+USER_UPDATER = Path('~/{pref}'.format(pref=CONF['UPDATER']['pref'])).expanduser()
 
 # Have to do other non-core module loading here to avoid circular imports
 from . import arguments  # NOQA
@@ -62,11 +63,7 @@ from . import arguments  # NOQA
 ARGS = arguments.create(choices=PACKAGE_CHOICES)
 DMG_DEFAULT_FS = ARGS.apfs_dmg if ARGS.apfs_dmg else DMG_DEFAULT_FS
 
-if not ARGS.silent:
-    LOG.info('Run UUID: {uuid}'.format(uuid=RUN_UUID))
-else:
-    LOG.warning('Run UUID: {uuid}'.format(uuid=RUN_UUID))
-
+LOG.warning('Run UUID: {uuid}'.format(uuid=RUN_UUID))
 LOG.debug('{args}'.format(args=' '.join(sys.argv)))
 LOG.debug('{versionstr}'.format(versionstr=VERSION_STRING))
 LOG.debug('macOS {osver} ({osbuild} {arch})'.format(osver=osinfo.version(), osbuild=osinfo.build(), arch=osinfo.arch()))

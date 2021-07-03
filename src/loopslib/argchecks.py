@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from . import curl
 from . import osinfo
+from . import updater
 from . import HTTP_OK
 from . import HTTP_MIRROR_TEST_PATHS
 
@@ -26,6 +27,8 @@ def error(msg, helper, fatal=False, returncode=1):
 def check(args, helper, choices):
     """Check arguments for specific conditions"""
     PKG_SERVER_IS_DMG = True if args.pkg_server and str(args.pkg_server).endswith('.dmg') else False
+    latest_plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
+    update_latest_plists = {_k: _v for _k, _v in choices['latest'].items() if _k != 'all'}
 
     # Deployment - must be root
     if args.deployment:
@@ -120,9 +123,13 @@ def check(args, helper, choices):
     # Handle fetch latest
     if args.fetch_latest:
         if 'all' in args.fetch_latest:
-            args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
+            args.plists = ['{choice}'.format(choice=c) for c in latest_plists]
         else:
-            args.plists = ['{choice}.plist'.format(choice=c) for _k, c in choices['latest'].items() if _k in args.fetch_latest]
+            args.plists = ['{plist}.plist'.format(plist=update_latest_plists[app]) for app in args.fetch_latest]
+
+        # Do an update check
+        plists = updater.check(apps=args.plists, latest=update_latest_plists)
+        args.plists = ['{plist}.plist'.format(plist=_v) for _, _v in plists.items()]
 
     # Handle comparisons
     if args.compare:

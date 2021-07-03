@@ -67,3 +67,6 @@ DMG:
 
 INSTALL:
   target: /
+
+UPDATER:
+  pref: /Library/Application Support/com.github.carlashley/appleloops/updatehistory.plist
