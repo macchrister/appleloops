@@ -4,7 +4,6 @@ MODULE:
   version: 3.2.4
   build_date: 2021-02-19
   license: Apache-2.0 License
-
 APPLICATIONS:
   app_folder: /Applications
   supported:
@@ -15,7 +14,6 @@ APPLICATIONS:
     garageband: GarageBand
     logicpro: Logic Pro
     mainstage: MainStage
-
 AUDIOCONTENT:
   base_url: https://audiocontentdownload.apple.com
   feed_url: https://audiocontentdownload.apple.com/lp10_ms3_content_2016
@@ -46,7 +44,6 @@ AUDIOCONTENT:
       mainstage330: mainstage330.plist
       mainstage340: mainstage340.plist
       mainstage350: mainstage350.plist
-
 CURL:
   http_ok_status:
     - 200
@@ -55,7 +52,6 @@ CURL:
     - 303
     - 307
     - 308
-
 DMG:
   volume_name: appleloops
   mountpoint: /Volumes/appleloops
@@ -64,9 +60,7 @@ DMG:
     - APFS
     - HFS+
     - HFS+J
-
 INSTALL:
   target: /
-
 UPDATER:
   pref: /Library/Application Support/com.github.carlashley/appleloops/updatehistory.plist

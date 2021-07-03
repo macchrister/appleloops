@@ -73,6 +73,20 @@ class Application:
 
 class PropertyList:
     """Property list source of audio content packages."""
+    # NOTE: The 'PackageContentsUpdateData' key in some of these plists can contain a 'gzip'
+    # file encoded as a data type. This is an sqlite file that contains "some" information
+    # about the content. It's hard to say what exactly this information is/correlates to
+    # within the installation processes that each of the apps undertakes. The one table
+    # of some interest is the 'dbinfo' table which appears to have some basic versioning
+    # information about the specific plist, although the relevance of this is yet to be
+    # determined.
+    # Not all property lists have the 'PackageContentsUpdateData' key, and some that
+    # do have this key don't necessarily have a 'gzip' file embedded in.
+    # For those files that do have the 'PackageContentsUpdateData' key but the data
+    # embedded is not a 'gzip' file (byte header '\x1f\x8b\x08'), the byte header
+    # appears to be 'MAZP\x00\n\x01] '. When saving this as a 'gzip', the inbuilt
+    # macOS Archive Utility decompresses it to a 'cgzp' file, which unzips to the
+    # original file. I'm yet to work out what this is (a byte map/array?)
     def __init__(self, plist, comparing=False):
         self.comparing = comparing  # Used for badwolf - process ALL packages
         self.plist = '{feedurl}/{plist}'.format(feedurl=FEED_URL, plist=plist)
