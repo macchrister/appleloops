@@ -4,5 +4,4 @@
 
 # Folders
 __pycache__
-dist/custom/pkg
-dist/custom/zipapp
+build/pkg
