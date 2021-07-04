@@ -7,6 +7,7 @@
 ## Functionality
 - Downloads additional audio content from `audiocontentdownload.apple.com`.
 - - Fetch the latest content for specific apps.
+- - - Checks 11 versions ahead of the last known current version, stores results in either the user/system `Library/Application Support/com.github.carlashley/appleloops/`. *Note* this polls the Apple servers for updated source content files, if found, it will download the content for all/individual apps as specified with the `--fetch-latest` argument. Any mistakes or patching that are done internally to known issues with these files can't be done until issues are raised and appropriate patches are worked out.
 - - Fetch all the content for all the apps.
 - Create a DMG of downloaded content.
 - Installs audio content packages on macOS devices that already have a qualifying audio app from Apple installed.
