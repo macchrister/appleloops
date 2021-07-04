@@ -1,7 +1,7 @@
 MODULE:
   name: appleloops
   bundle_id: com.github.carlashley.appleloops
-  version: 3.2.4
+  version: 3.2.3
   build_date: 2021-02-19
   license: Apache-2.0 License
 APPLICATIONS:
