@@ -63,6 +63,26 @@ garageband1021.plist:               # Feed for GarageBand versions using the gar
   MAContent10_AssetPack_0509_EXS_StringsEnsemble:
     IsMandatory: true
 # ----- Logic Pro ----- #
+logicpro1021.plist:  # Yes, all these versions of Logic Pro really do have the same PackageID typo of double 'MAContent10_' in the ID
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+
+logicpro1022.plist:  # Yes, all these versions of Logic Pro really do have the same PackageID typo of double 'MAContent10_' in the ID
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+
+logicpro1023.plist:  # Yes, all these versions of Logic Pro really do have the same PackageID typo of double 'MAContent10_' in the ID
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+
+logicpro1030.plist:  # Yes, all these versions of Logic Pro really do have the same PackageID typo of double 'MAContent10_' in the ID
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+
+logicpro1032.plist:  # Yes, all these versions of Logic Pro really do have the same PackageID typo of double 'MAContent10_' in the ID
+  IRsSurroundPackage:
+    PackageID: com.apple.pkg.MAContent10_IRsSurround
+
 logicpro1050.plist:
   MAContent10_AssetPack_0755_AppleLoopsPrismatica:
     DownloadName: MAContent10_AssetPack_0801_AppleLoopsPrismaticaB.pkg
@@ -70,12 +90,14 @@ logicpro1050.plist:
   MAContent10_AssetPack_0796_DemosongLogicoceaneyes:
     FileCheck: /Library/Application Support/Logic/Logic Pro X Demosongs/ocean eyes.logicx/Alternatives/001/DisplayState.plist
 # ----- MainsStage ----- #
-mainstage323.plist:  # Yes, all three versions of MainStage really do have the same PackageID typo of double 'MAContent10_' in the ID
+mainstage323.plist:  # Yes, all these versions of MainStage really do have the same PackageID typo of double 'MAContent10_' in the ID
   IRsSurroundPackage:
     PackageID: com.apple.pkg.MAContent10_IRsSurround
-mainstage324.plist:
+
+mainstage324.plist: # Yes, all these versions of MainStage really do have the same PackageID typo of double 'MAContent10_' in the ID
   IRsSurroundPackage:
     PackageID: com.apple.pkg.MAContent10_IRsSurround
-mainstage330.plist:
+
+mainstage330.plist: # Yes, all these versions of MainStage really do have the same PackageID typo of double 'MAContent10_' in the ID
   IRsSurroundPackage:
     PackageID: com.apple.pkg.MAContent10_IRsSurround

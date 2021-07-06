@@ -41,7 +41,7 @@ def check(args, helper, choices):
             args.apps = [c for c in choices['supported'] if c != 'all']
 
     # Must provide 'mandatory' or 'optional' package set
-    if not (args.mandatory or args.optional):
+    if not (args.mandatory or args.optional) and not args.packages:
         error(msg='-m/--mandatory or -o/--optional or both are required', fatal=True, helper=helper, returncode=60)
 
     # APFS DMG requires build
@@ -130,6 +130,21 @@ def check(args, helper, choices):
         # Do an update check
         plists = updater.check(apps=args.plists, latest=update_latest_plists)
         args.plists = ['{plist}.plist'.format(plist=_v) for _, _v in plists.items()]
+
+    # Handle individual package downloads by setting args.plists to all plists for searchability.
+    if args.packages:
+        args.plists = [c for c in choices['plists'] if c != 'all']
+        args.ignore_patches = True
+        args.force = True
+
+    # Sort args.plists into reverse order so newewst releases are handled first
+    if args.plists:
+        # sort the plists by name first, then version
+        gb = sorted([p for p in args.plists if p.startswith('garageband')], reverse=True)
+        lp = sorted([p for p in args.plists if p.startswith('logicpro')], reverse=True)
+        ms = sorted([p for p in args.plists if p.startswith('mainstage')], reverse=True)
+
+        args.plists = gb + lp + ms
 
     # Handle comparisons
     if args.compare:

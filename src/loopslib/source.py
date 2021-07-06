@@ -2,7 +2,7 @@ import logging
 import re
 
 from collections import namedtuple
-from pathlib import Path
+from pathlib import Path, PurePath
 from urllib.parse import urlparse
 
 from . import badwolf
@@ -126,6 +126,14 @@ class PropertyList:
 
         # Patch and create instances of packages
         if result:
+            # Remove all packages that aren't in ARGS.packages if specific package are to be processed
+            if ARGS.packages:
+                for pkg, attrs in result.copy().items():
+                    download_name = attrs.get('DownloadName', None)
+
+                    if PurePath(download_name).name not in ARGS.packages:
+                        del result[pkg]
+
             LOG.debug('Loaded packages from {plist}'.format(plist=self.plist))
             result = badwolf.patch(packages=result, source=self.plist, comparing=self.comparing)
 

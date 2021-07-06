@@ -49,6 +49,13 @@ standard:
       help: forces cURL to use http2
       required: false
   - args:
+    - --ignore-patches
+    kwargs:
+      action: store_true
+      dest: ignore_patches
+      help: ignores any patches to fix reported issues with deployments
+      required: false
+  - args:
     - -i
     - --allow-insecure
     kwargs:
@@ -194,6 +201,15 @@ mutually_exclusive:
       dest: show_plists
       help: lists supported property lists
       required: false
+  - args:
+    - --packages
+    kwargs:
+      dest: packages
+      help: specify individual package/s to download/install
+      metavar: <pkg>
+      nargs: +
+      required: false
+      type: *id001
   pkg_sources:
   - args:
     - -c
