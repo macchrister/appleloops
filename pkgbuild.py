@@ -19,13 +19,6 @@ def arguments():
     result = None
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-c', '--clean',
-                        dest='clean',
-                        action='store_true',
-                        help='cleans cruft before building (default behaviour)',
-                        default=True,
-                        required=False)
-
     parser.add_argument('-p', '--python',
                         dest='python',
                         metavar='[path]',
@@ -40,7 +33,7 @@ def arguments():
                         default=str(PurePath(Path.cwd(), 'src')),
                         required=False)
 
-    # Directory for building a package to
+    # Directory for building a package to. Internal use only.
     parser.add_argument('--pkg-dir',
                         dest='pkg_dir',
                         metavar='[path]',
@@ -48,6 +41,7 @@ def arguments():
                         default=str(PurePath(Path.cwd(), 'build/pkg')),
                         required=False)
 
+    # Root directory for package building. Internal use only.
     parser.add_argument('--pkg-root',
                         dest='pkg_root',
                         metavar='[path]',
