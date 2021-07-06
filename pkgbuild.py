@@ -94,6 +94,9 @@ def build_package(config, zipsource, shebang, pkgroot, dest, signing_cert=None):
 
     zipapp.create_archive(source=zipsource, target=zipfile, interpreter=shebang, compressed=True)
 
+    if not Path(dest).exists():
+        Path(dest).mkdir(parents=True, exist_ok=True)
+
     pkgbuild = ['/usr/bin/pkgbuild', '--root', pkgroot,
                 '--filter', '.DS_Store',
                 '--filter', '__pycache__',
@@ -117,7 +120,7 @@ def build_package(config, zipsource, shebang, pkgroot, dest, signing_cert=None):
         print(_pkgbuild.stderr)
 
         component.unlink(missing_ok=True)
-        sys.exit(_pkgbuild.returncode.strip())
+        sys.exit(_pkgbuild.returncode)
 
     _productbuild = subprocess.run(productbuild, capture_output=True, encoding='utf-8')
 
