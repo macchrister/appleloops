@@ -48,7 +48,7 @@ class LoopPackage:
         self.upgrade = pkgutil.upgrade_pkg(self.installed_version, self.version)
         self.url = self.parse_url(self.download_name)
         self.download_dest = self.parse_dest(self.url)
-        self.download_size = self.parse_download_size(self.url)
+        self.download_size, self.download_resume, self.cdn_uuid = self.parse_headers(self.url)
         self.badwolf_ignore = False
         self.status = self.parse_http_status(self.url)
         self.download_name = str(PurePath(self.download_name).name)  # Make the download name friendly
@@ -108,19 +108,23 @@ class LoopPackage:
 
         return result
 
-    def parse_download_size(self, u):
-        """Parse the download size, returns an int"""
-        result = 0
+    def parse_headers(self, u):
+        """Parse information from headers, returns an tuple containing size, resume, CDN UUID"""
+        result = None
+        headers = dict()
+        size, resume, cdn_uuid = 0, False, None
 
-        if ARGS.deployment:
-            if urlparse(u).scheme:
-                result = curl.headers(self.url).get('content-length', 0)
-            elif PKG_SERVER_IS_DMG:
-                if Path(u).exists():
-                    result = Path(u).stat().st_size
-                    LOG.debug('Download size set to local path file size {size}'.format(size=result))
-        else:
-            result = curl.headers(self.url).get('content-length', 0)
+        if urlparse(u).scheme:
+            headers = curl.headers(self.url)
+            size = headers.get('content-length', 0)
+            resume = headers.get('accept-ranges', False) == 'bytes' or False
+            cdn_uuid = headers.get('cdnuuid', None)
+
+        if ARGS.deployment and PKG_SERVER_IS_DMG and Path(u).exists():
+            size = Path(u).stat().st_size
+            LOG.debug('Download size set to local path file size {size}'.format(size=size))
+
+        result = (size, resume, cdn_uuid)
 
         return result
 

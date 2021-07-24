@@ -196,7 +196,7 @@ def download_install(packages):
             if ARGS.pkg_server and PKG_SERVER_IS_DMG:
                 f = pkg.download_dest
             if urlscheme:
-                f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=True, http2=ARGS.http2, insecure=ARGS.insecure)
+                f = curl.get(u=pkg.url, dest=pkg.download_dest, quiet=ARGS.silent, resume=pkg.download_resume, http2=ARGS.http2, insecure=ARGS.insecure)
 
         # Do the deployment
         if ARGS.deployment:
