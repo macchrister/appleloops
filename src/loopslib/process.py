@@ -116,6 +116,9 @@ def freespace_checks(packages):
     # Set the correct destination to test disk space availability
     if ARGS.deployment:
         drive_dest = INSTALL_TARGET
+    elif ARGS.build_dmg:
+        # Destination must exist, the DMG doesn't exist at this point, so reference the sparseimage
+        drive_dest = '{dmg}.sparseimage'.format(dmg=ARGS.build_dmg)
     else:
         drive_dest = ARGS.destination
 
@@ -129,7 +132,9 @@ def freespace_checks(packages):
         required_totl_space = required_disk_space
         has_freespace = required_totl_space < available_space.bytes
 
-    result = (has_freespace, drive_dest)
+    # Reset the drive_dest for log output and other uses
+    if ARGS.build_dmg:
+        drive_dest = drive_dest.replace('.sparseimage', '')
 
     if not has_freespace:
         if ARGS.dry_run:
@@ -149,6 +154,8 @@ def freespace_checks(packages):
                                                                                                         req=disk.convert(required_totl_space),
                                                                                                         avail=available_space.hr)
         LOG.warning(msg)
+
+    result = (has_freespace, drive_dest)
 
     return result
 
