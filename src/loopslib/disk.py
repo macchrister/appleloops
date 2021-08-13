@@ -30,6 +30,11 @@ def statvfs(p):
     if not isinstance(p, (Path, PurePath)):
         p = Path(p)
 
+    # Find the first path that exists, because 'appleloops'
+    # may not exist until the first package is downloaded
+    while not p.exists():
+        p = Path(PurePath(p).parent)
+
     p = str(p.expanduser())
     s = os.statvfs(p)
 
