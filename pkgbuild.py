@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+'''Build distributable and package.'''
 import argparse
 import re
 import subprocess
