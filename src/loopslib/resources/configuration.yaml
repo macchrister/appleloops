@@ -1,25 +1,19 @@
-MODULE:
-  name: appleloops
-  bundle_id: com.github.carlashley.appleloops
-  version: 3.2.3
-  build_date: 2021-07-24
-  license: Apache-2.0 License
 APPLICATIONS:
   app_folder: /Applications
-  supported:
-    garageband: GarageBand.app
-    logicpro: Logic Pro X.app
-    mainstage: MainStage 3.app
   names:
     garageband: GarageBand
     logicpro: Logic Pro
     mainstage: MainStage
+  supported:
+    garageband: GarageBand.app
+    logicpro: Logic Pro X.app
+    mainstage: MainStage 3.app
 AUDIOCONTENT:
   base_url: https://audiocontentdownload.apple.com
   feed_url: https://audiocontentdownload.apple.com/lp10_ms3_content_2016
   mirror_test_paths:
-    - lp10_ms3_content_2013
-    - lp10_ms3_content_2016
+  - lp10_ms3_content_2013
+  - lp10_ms3_content_2016
   supported:
     garageband:
       garageband1011: garageband1011.plist
@@ -46,21 +40,27 @@ AUDIOCONTENT:
       mainstage350: mainstage350.plist
 CURL:
   http_ok_status:
-    - 200
-    - 301
-    - 302
-    - 303
-    - 307
-    - 308
+  - 200
+  - 301
+  - 302
+  - 303
+  - 307
+  - 308
 DMG:
-  volume_name: appleloops
-  mountpoint: /Volumes/appleloops
   default_fs: HFS+J
+  mountpoint: /Volumes/appleloops
   valid_fs:
-    - APFS
-    - HFS+
-    - HFS+J
+  - APFS
+  - HFS+
+  - HFS+J
+  volume_name: appleloops
 INSTALL:
   target: /
+MODULE:
+  build_date: '2021-08-13'
+  bundle_id: com.github.carlashley.appleloops
+  license: Apache-2.0 License
+  name: appleloops
+  version: 3.2.3
 UPDATER:
   pref: /Library/Application Support/com.github.carlashley/appleloops/updatehistory.plist
