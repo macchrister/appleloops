@@ -183,7 +183,7 @@ class LoopPackage:
         # Setting destination here avoids issues where disk space checks would fail if
         # downloading to a DMG as the sparseimage will have no space, but the drive
         # the sparseimage is stored on will have the space.
-        destination = ARGS.build_dmg if ARGS.build_dmg else ARGS.destination
+        destination = DMG_MOUNT if ARGS.build_dmg else ARGS.destination
 
         if ARGS.flat_mirror:
             dest = '{dest}/{pkgname}'.format(dest=destination, pkgname=PurePath(u).name)
