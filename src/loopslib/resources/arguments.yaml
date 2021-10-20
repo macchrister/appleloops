@@ -19,6 +19,17 @@ standard:
       required: false
       type: &id001 !!python/name:builtins.str ''
   - args:
+    - --check-ahead
+    kwargs:
+      default:
+        - '5'
+        - '10'
+      dest: check_ahead
+      help: check ahead n number of releases, defaults to 5 minor releases and 10 patch releases
+      metavar: <releases>
+      nargs: 2
+      required: false
+  - args:
     - -n
     - --dry-run
     kwargs:

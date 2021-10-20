@@ -120,6 +120,9 @@ def check(args, helper, choices):
     if args.plists and 'all' in args.plists:
         args.plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
 
+    if args.check_ahead and not args.fetch_latest:
+        error(msg='--check-ahead: not allowed without argument --fetch-latest', fatal=True, helper=helper, returncode=53)
+
     # Handle fetch latest
     if args.fetch_latest:
         if 'all' in args.fetch_latest:
@@ -128,7 +131,7 @@ def check(args, helper, choices):
             args.plists = ['{plist}.plist'.format(plist=update_latest_plists[app]) for app in args.fetch_latest]
 
         # Do an update check
-        plists = updater.check(apps=args.plists, latest=update_latest_plists)
+        plists = updater.check(apps=args.plists, latest=update_latest_plists, check_ahead=args.check_ahead)
         args.plists = ['{plist}.plist'.format(plist=_v) for _, _v in plists.items()]
 
     # Handle individual package downloads by setting args.plists to all plists for searchability.

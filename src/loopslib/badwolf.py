@@ -45,8 +45,7 @@ def patch(packages, source, comparing=False):
     # Raises an IndexError if the source is not a valid source
     if source.endswith('.plist'):
         if source not in [_v for _, _v in sources.items()]:
-            LOG.info('{source} property list for patching is not a valid source.'.format(source=source))
-            raise IndexError
+            LOG.warning('No badwolf patches found to apply for {source}.'.format(source=source))
 
     # Read the patch info from the badwolf yaml and get the relevant source patches
     patches = read().get(source, dict())
