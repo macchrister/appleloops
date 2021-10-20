@@ -28,7 +28,14 @@ def check(args, helper, choices):
     """Check arguments for specific conditions"""
     PKG_SERVER_IS_DMG = True if args.pkg_server and str(args.pkg_server).endswith('.dmg') else False
     latest_plists = ['{choice}.plist'.format(choice=c) for _, c in choices['latest'].items() if c != 'all']
+    supported_plists = [p for p in choices['plists'] if not p == 'all']
     update_latest_plists = {_k: _v for _k, _v in choices['latest'].items() if _k != 'all'}
+
+    if args.supported_plists:
+        for plist in supported_plists:
+            print(plist)
+
+        sys.exit()
 
     # Deployment - must be root
     if args.deployment:
@@ -41,8 +48,9 @@ def check(args, helper, choices):
             args.apps = [c for c in choices['supported'] if c != 'all']
 
     # Must provide 'mandatory' or 'optional' package set
-    if not (args.mandatory or args.optional) and not args.packages:
-        error(msg='-m/--mandatory or -o/--optional or both are required', fatal=True, helper=helper, returncode=60)
+    if args.deployment or args.destination or args.build_dmg or args.apps or args.fetch_latest or args.plists:
+        if not (args.mandatory or args.optional):
+            error(msg='-m/--mandatory or -o/--optional or both are required', fatal=True, helper=helper, returncode=60)
 
     # APFS DMG requires build
     if args.apfs_dmg and not args.build_dmg:
@@ -125,6 +133,9 @@ def check(args, helper, choices):
 
     # Handle fetch latest
     if args.fetch_latest:
+        if not args.check_ahead:
+            args.check_ahead = ['5', '10']
+
         if 'all' in args.fetch_latest:
             args.plists = ['{choice}'.format(choice=c) for c in latest_plists]
         else:

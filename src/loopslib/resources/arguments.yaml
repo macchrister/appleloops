@@ -21,9 +21,6 @@ standard:
   - args:
     - --check-ahead
     kwargs:
-      default:
-        - '5'
-        - '10'
       dest: check_ahead
       help: check ahead n number of releases, defaults to 5 minor releases and 10 patch releases
       metavar: <releases>
@@ -209,7 +206,7 @@ mutually_exclusive:
     - --supported-plists
     kwargs:
       action: store_true
-      dest: show_plists
+      dest: supported_plists
       help: lists supported property lists
       required: false
   - args:

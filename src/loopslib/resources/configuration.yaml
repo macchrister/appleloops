@@ -59,10 +59,10 @@ DMG:
 INSTALL:
   target: /
 MODULE:
-  build_date: '2021-08-13'
+  build_date: '2021-10-20'
   bundle_id: com.github.carlashley.appleloops
   license: Apache-2.0 License
   name: appleloops
-  version: 3.2.3
+  version: 3.2.4
 UPDATER:
   pref: /Library/Application Support/com.github.carlashley/appleloops/updatehistory.plist
