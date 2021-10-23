@@ -185,7 +185,7 @@ def download_install(packages):
             download_msg = '{dld_prefix} {count} of {total} - {pkgname} ({size})'.format(dld_prefix=download_msg_prefix,
                                                                                          count=padded_counter,
                                                                                          total=total_pkgs,
-                                                                                         pkgname=pkg.download_name,
+                                                                                         pkgname=pkg.url,
                                                                                          size=disk.convert(pkg.download_size))
 
             if not ARGS.summary_only:
