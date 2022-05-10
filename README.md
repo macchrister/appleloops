@@ -1,6 +1,44 @@
 # appleloops
 A utility to manage the deployment of the additional audio content Apple provides for GarageBand, Logic Pro X, and MainStage 3.
 
+# 2022-05-10
+For several personal and private reasons, I will no longer be able to actively maintain this repo.
+
+If anyone would like to fork it off and take over active maintenance/create a new tool in Swift, or better yet, file feedback with Apple to provide a tool to deploy these packages automatically, please feel free to do so.
+
+The most recent build is available from the dev branch.
+
+This repo will be marked read only from now on. No further support will be available.
+
+Thank you to everyone that has helped out with testing this over the years.
+
+
+Carl.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 2020-11-20 - Python 2 Deprecation:
 - The next release of appleloops will be properly Python 3 only and will hard exit if the version is not at least `3.7.9`.
 
