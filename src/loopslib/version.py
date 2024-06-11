@@ -9,8 +9,8 @@ from sys import version_info
 LOG = logging.getLogger(__name__)
 
 AUTHOR = 'Carl Windus and edit by macchrister'
-VERSION = '3.2.3'
-VER_DATE = '2022-05-31'
+VERSION = '3.2.4'
+VER_DATE = '2024-06-11'
 LICENSE = 'Apache License, Version 2.0'
 COPYRIGHT = 'Copyright 2019, {}'.format(AUTHOR)
 VERSION_STR = 'appleloops v{} built {}, {}'.format(VERSION, VER_DATE, LICENSE)
